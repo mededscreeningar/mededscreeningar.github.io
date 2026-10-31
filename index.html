@@ -1,0 +1,779 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow"><title>MedEdScreeningAR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Oswald:wght@400;500;600&display=swap">
+<style>
+/* Layout: картотека. Сводка и фильтры сверху, сетка карточек курсантов, подробная карточка в диалоге, внизу курсы. */
+:root{
+  --bg:#EEF1F5; --panel:#FFFFFF; --soft:#F4F6F9; --line:#D9DEE5; --ink:#161C24; --muted:#5F6B78; --dim:#98A3AF;
+  --arx:#2a78d6; --arx-soft:#E3EEFB; --other:#B4BCC6; --other-soft:#E6EAEF;
+  --b2:#eb6834; --b3:#1baf7a; --b4:#eda100; --b5:#e87ba4; --unk:#D3D9E0;
+  --good:#1b7f2a; --good-soft:#E1F3E4; --warn:#9a6600; --warn-soft:#FBF0D6; --bad:#c43a39; --bad-soft:#FBE3E2; --neu:#5F6B78; --neu-soft:#E9EDF1;
+  --f-ui:"Golos Text",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-num:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F141A; --panel:#171D25; --soft:#1E252E; --line:#2B3541; --ink:#E7ECF1; --muted:#97A3B0; --dim:#66717D;
+  --arx:#3987e5; --arx-soft:#1B2E47; --other:#5C6773; --other-soft:#2A3340;
+  --b2:#d95926; --b3:#199e70; --b4:#c98500; --b5:#d55181; --unk:#3A4450;
+  --good:#5BC27A; --good-soft:#163A22; --warn:#E0A53A; --warn-soft:#3A2E16; --bad:#E2725F; --bad-soft:#44201C; --neu:#97A3B0; --neu-soft:#242C36;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F141A; --panel:#171D25; --soft:#1E252E; --line:#2B3541; --ink:#E7ECF1; --muted:#97A3B0; --dim:#66717D;
+  --arx:#3987e5; --arx-soft:#1B2E47; --other:#5C6773; --other-soft:#2A3340;
+  --b2:#d95926; --b3:#199e70; --b4:#c98500; --b5:#d55181; --unk:#3A4450;
+  --good:#5BC27A; --good-soft:#163A22; --warn:#E0A53A; --warn-soft:#3A2E16; --bad:#E2725F; --bad-soft:#44201C; --neu:#97A3B0; --neu-soft:#242C36;
+  color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:14px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:22px 60px}
+.wrap{max-width:1360px;margin:0 auto;min-width:0}
+h1,h2,h3{margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:30px;font-weight:700;line-height:1.1}
+h2{font-size:18px;font-weight:600;margin:0 0 10px}
+.eyebrow{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--arx);font-weight:600}
+.sub{color:var(--muted)}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+a{color:var(--arx)}
+button,input,select{font-family:inherit;font-size:13px;color:var(--ink)}
+button:focus-visible,input:focus-visible,select:focus-visible,.card:focus-visible{outline:2px solid var(--arx);outline-offset:2px}
+.head{display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap;margin-bottom:18px}
+.head .l{flex:1 1 420px;min-width:0}
+.head .r{font-size:12px;color:var(--muted);text-align:right;flex:0 1 auto}
+.head .r b{display:block;color:var(--ink);font-weight:500}
+.notice{background:var(--warn-soft);border:1px solid var(--warn);border-radius:var(--r);padding:10px 14px;font-size:13px;margin-bottom:16px}
+.notice b{color:var(--warn)}
+details.method{margin:0 0 16px;font-size:13px;color:var(--muted)}
+details.method summary{cursor:pointer;color:var(--ink);font-weight:500;list-style:none;display:inline-flex;gap:6px;align-items:center}
+details.method summary::before{content:"▸";font-size:11px}
+details.method[open] summary::before{content:"▾"}
+details.method ul{margin:6px 0 0;padding-left:18px}
+/* сводка */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;min-width:0}
+.kpi .l{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:500}
+.kpi .v{font-family:var(--f-num);font-size:24px;font-weight:600;margin-top:4px;line-height:1.1;overflow-wrap:anywhere}
+.kpi .d{font-size:12px;color:var(--muted);margin-top:3px}
+.kpi.arx .v{color:var(--arx);font-size:20px}
+.kpi .v .arrow{font-size:16px;color:var(--muted);margin:0 6px}
+.kpi .v .delta{font-size:13px;font-weight:500}
+.up{color:var(--good)}.down{color:var(--bad)}
+/* фильтры */
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;margin-bottom:12px}
+.filters input,.filters select{background:var(--soft);border:1px solid var(--line);border-radius:7px;padding:7px 10px;min-width:0}
+.filters input{flex:1 1 220px}
+.filters select{flex:0 1 auto;max-width:100%}
+.filters .count{margin-left:auto;font-size:12px;color:var(--muted);white-space:nowrap}
+.filters button.reset{background:none;border:1px solid var(--line);border-radius:7px;padding:7px 10px;cursor:pointer;color:var(--muted)}
+.flagbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;line-height:1;padding:5px 9px;border-radius:999px;border:1px solid transparent;white-space:nowrap;max-width:100%}
+.chip .n{font-family:var(--f-num);font-size:11px;opacity:.8}
+.chip.good{background:var(--good-soft);color:var(--good)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.bad{background:var(--bad-soft);color:var(--bad)}
+.chip.neutral{background:var(--neu-soft);color:var(--neu)}
+.chip.course{background:var(--soft);color:var(--muted);border-color:var(--line);font-size:11.5px}
+.chip.new{background:var(--arx-soft);color:var(--arx);font-weight:600}
+.chip.new::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--arx);flex:none;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+@media (prefers-reduced-motion:reduce){.chip.new::before{animation:none}}
+.card.hasnew{border-color:var(--arx);box-shadow:0 0 0 1px var(--arx-soft)}
+.kpi.newk{border-color:var(--arx)}
+.kpi.newk .v{color:var(--arx)}
+.list li.new{box-shadow:inset 3px 0 0 var(--arx)}
+.stagepill.new{background:var(--arx-soft);color:var(--arx);font-weight:600}
+.chip.course.kn{border-left:3px solid var(--b3)}
+.chip.course.sh{border-left:3px solid var(--b2)}
+.chip.course.own{color:var(--ink);font-weight:600;border-color:var(--ink)}
+.chip.course.other{opacity:.7}
+.also{font-size:11px;color:var(--dim);align-self:center}
+.list li.own{outline:1px solid var(--arx)}
+.flagbar button.chip{cursor:pointer}
+.flagbar button.chip.on{border-color:currentColor;font-weight:600}
+/* сетка карточек */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px 14px 12px;display:flex;flex-direction:column;gap:9px;min-width:0;cursor:pointer;text-align:left;width:100%;transition:border-color .15s}
+.card:hover{border-color:var(--arx)}
+.card.nodata{background:transparent;cursor:default}
+.card.nodata:hover{border-color:var(--line)}
+.card .who{display:flex;gap:10px;align-items:flex-start}
+.card .who .t{flex:1;min-width:0}
+.card .fio{font-weight:600;font-size:15px;line-height:1.25}
+.card .hosp{font-size:12.5px;color:var(--muted);margin-top:2px;overflow-wrap:anywhere}
+.card .ava{width:36px;height:36px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:600;font-size:12px;color:var(--arx);background:var(--arx-soft)}
+.card.nodata .ava{color:var(--muted);background:var(--neu-soft)}
+.card .chips{display:flex;gap:5px;flex-wrap:wrap}
+.card .mets{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;border-top:1px solid var(--line);padding-top:9px}
+.card .met .l{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.card .met .v{font-family:var(--f-num);font-size:14px;font-weight:600;margin-top:2px;white-space:nowrap}
+.card .met .v small{font-weight:400;color:var(--muted);font-size:11px}
+.card .met.arx .v{color:var(--arx)}
+.card svg.spark{width:100%;height:46px;display:block}
+.card .yrow{display:flex;flex-direction:column;gap:2px}
+.card .yrow .cap{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.04em}
+.card svg.ybars{width:100%;height:30px;display:block}
+.yr summary{cursor:pointer;font-weight:600;font-size:13px;display:flex;gap:10px;flex-wrap:wrap;align-items:baseline}
+.yr summary .num{color:var(--muted);font-weight:400;font-size:12px}
+.yr{border-top:1px solid var(--line);padding:6px 0}
+.ybrand{display:grid;grid-template-columns:44px 1fr 90px;gap:8px;align-items:center;font-size:12px}
+.ybrand .trk{display:flex;height:14px;border-radius:3px;overflow:hidden;background:var(--soft);gap:1px}
+.ybrand .trk i{display:block;height:100%}
+.ybrand .num{text-align:right;color:var(--muted)}
+.stagepill{font-size:10.5px;padding:1px 6px;border-radius:999px;background:var(--neu-soft);color:var(--neu)}
+.stagepill.live{background:var(--good-soft);color:var(--good)}
+.exf{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.exf select,.exf input{background:var(--soft);border:1px solid var(--line);border-radius:7px;padding:6px 8px;font-size:12.5px;max-width:100%;min-width:0}
+.exf input{flex:1 1 220px}
+.exf .chk{font-size:12.5px;display:inline-flex;gap:5px;align-items:center;color:var(--muted);white-space:nowrap}
+.exsum{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start;font-size:13px;margin:8px 0}
+.exbtn{display:flex;gap:6px;flex-wrap:wrap}
+.btn{background:var(--arx);color:#fff;border:0;border-radius:8px;padding:8px 14px;font-weight:600;cursor:pointer}
+.btn.ghost{background:var(--soft);color:var(--ink);border:1px solid var(--line);font-weight:500}
+.btn:disabled{opacity:.6;cursor:default}
+.ask{background:var(--soft);border-radius:12px;padding:14px}
+.ask .chips{display:flex;gap:5px;flex-wrap:wrap}
+.ask .chips .chip{cursor:pointer}
+.askrow{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap}
+.askrow textarea{flex:1 1 320px;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-family:inherit;font-size:13.5px;color:var(--ink);resize:vertical}
+.askbtns{display:flex;gap:6px;flex-wrap:wrap}
+.askout{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;white-space:pre-wrap;font-size:13.5px;line-height:1.5;max-height:420px;overflow:auto}
+
+.card .foot{font-size:11px;color:var(--dim);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.card .reason{font-size:12.5px;color:var(--muted);border-top:1px dashed var(--line);padding-top:8px}
+.legend{font-size:11.5px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;margin:0 0 10px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:5px}
+.empty{padding:40px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:var(--r)}
+/* диалог */
+dialog{border:0;border-radius:14px;padding:0;background:var(--panel);color:var(--ink);width:min(960px,calc(100vw - 24px));max-height:calc(100vh - 24px);box-shadow:0 30px 80px rgba(0,0,0,.35)}
+dialog::backdrop{background:rgba(10,14,20,.55)}
+.dlg{padding:20px 22px 26px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.dlg .top{display:flex;gap:14px;align-items:flex-start}
+.dlg .top .t{flex:1;min-width:0}
+.dlg h2.name{font-size:22px;font-weight:700;margin:0}
+.dlg .hosp{color:var(--muted);margin-top:3px;overflow-wrap:anywhere}
+.dlg .meta{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:8px}
+.dlg .meta b{color:var(--ink);font-weight:500}
+.x{background:var(--soft);border:1px solid var(--line);border-radius:50%;width:34px;height:34px;cursor:pointer;font-size:18px;line-height:1;flex:none}
+.sec{display:flex;flex-direction:column;gap:8px;min-width:0}
+.sec h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:720px){.two{grid-template-columns:1fr}.card .mets{grid-template-columns:1fr 1fr}}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:6px 8px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:500;color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.04em}
+td.n,th.n{text-align:right;font-family:var(--f-num);font-variant-numeric:tabular-nums;white-space:nowrap}
+td.arx{color:var(--arx);font-weight:600}
+.tscroll{overflow-x:auto;min-width:0}
+.bars{display:flex;flex-direction:column;gap:6px}
+.bar{display:grid;grid-template-columns:70px 1fr;gap:10px;align-items:center;font-size:12.5px}
+.bar .lab{color:var(--muted)}
+.bar .trk{display:flex;height:18px;border-radius:4px;overflow:hidden;background:var(--soft);gap:2px}
+.bar .trk i{display:block;height:100%}
+.blegend{display:flex;gap:4px 12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.blegend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.chartbox{position:relative;min-width:0}
+svg.monthly{width:100%;height:220px;display:block}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;padding:6px 9px;border-radius:6px;white-space:nowrap;transform:translate(-50%,-110%);display:none;z-index:2}
+.tip b{font-family:var(--f-num)}
+.list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.list li{background:var(--soft);border-radius:8px;padding:9px 11px;font-size:13px;min-width:0}
+.list li .h{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.list li .h b{font-weight:600}
+.list li .s{color:var(--muted);font-size:12px;margin-top:2px;overflow-wrap:anywhere}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13px}
+.kv div:nth-child(odd){color:var(--muted)}
+.note{font-size:12.5px;color:var(--muted)}
+details.years summary{cursor:pointer;font-size:13px;color:var(--arx)}
+/* курсы */
+section.courses{margin-top:34px}
+section.courses .tscroll{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:4px 10px}
+tr.crow{cursor:pointer}
+tr.crow:hover td{background:var(--soft)}
+@media (prefers-reduced-motion:no-preference){.card{transition:border-color .15s,transform .15s}.card:not(.nodata):hover{transform:translateY(-1px)}}
+/* ---------- вид «Кино»: тёмный зал, постеры, плёнка, прожектор. Включается кнопкой, хранится в localStorage. */
+:root[data-look="cinema"]{
+  --bg:#07090E; --panel:#10151F; --soft:#161C29; --line:#262E40; --ink:#F3EFE7; --muted:#9BA4B4; --dim:#5D6677;
+  --arx:#4D9BFF; --arx-soft:#14284A; --other:#4A5568; --other-soft:#232B3A;
+  --b2:#F0763F; --b3:#2BB889; --b4:#E9B13A; --b5:#E8729F; --unk:#394256;
+  --good:#5BC27A; --good-soft:#153A24; --warn:#E6B45A; --warn-soft:#3A2D12; --bad:#E86A5A; --bad-soft:#44201C; --neu:#9BA4B4; --neu-soft:#1E2635;
+  --gold:#E6B45A; --gold-soft:#3A2D12; --f-display:"Oswald","Golos Text",system-ui,sans-serif;
+  color-scheme:dark;
+}
+:root[data-look="cinema"] body{background:radial-gradient(1200px 600px at 50% -200px,#1B2740 0%,transparent 60%),radial-gradient(800px 400px at 100% 100%,#1a1424 0%,transparent 55%),var(--bg)}
+:root[data-look="cinema"] body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9;opacity:.07;mix-blend-mode:screen;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .6 0'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>")}
+:root[data-look="cinema"] .head{padding-top:6px;border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:22px;position:relative}
+:root[data-look="cinema"] .head::before{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:linear-gradient(90deg,var(--gold),transparent 60%)}
+:root[data-look="cinema"] .eyebrow{color:var(--gold);letter-spacing:.22em;font-size:11px}
+:root[data-look="cinema"] h1{font-family:var(--f-display);font-weight:600;font-size:46px;text-transform:uppercase;letter-spacing:.04em;line-height:1}
+:root[data-look="cinema"] .notice{background:var(--gold-soft);border-color:var(--gold)}
+:root[data-look="cinema"] .notice b{color:var(--gold)}
+:root[data-look="cinema"] .kpi{background:linear-gradient(170deg,#141A27,#0E131D);border-color:var(--line);border-radius:6px;position:relative;overflow:hidden}
+:root[data-look="cinema"] .kpi::after{content:"";position:absolute;left:14px;right:14px;top:0;height:1px;background:linear-gradient(90deg,var(--gold),transparent)}
+:root[data-look="cinema"] .kpi .v{font-family:var(--f-display);font-size:30px;font-weight:500;letter-spacing:.01em;white-space:normal;overflow-wrap:anywhere}
+:root[data-look="cinema"] .kpi.arx .v{font-size:22px}
+:root[data-look="cinema"] .kpi .v .arrow{font-size:14px;margin:0 4px}
+:root[data-look="cinema"] .kpi .l{color:var(--gold);letter-spacing:.14em}
+:root[data-look="cinema"] .filters{background:var(--panel);border-radius:6px}
+:root[data-look="cinema"] .chip{border-radius:3px}
+:root[data-look="cinema"] .chip.course{font-family:var(--f-display);text-transform:uppercase;letter-spacing:.06em;font-size:11px}
+:root[data-look="cinema"] .chip.course.own{border-color:var(--gold);color:var(--gold)}
+:root[data-look="cinema"] .grid{gap:16px}
+:root[data-look="cinema"] .card{position:relative;overflow:hidden;border-radius:6px;border:1px solid #2A3348;background:linear-gradient(165deg,#161D2C 0%,#0E131D 60%,#0A0E16 100%);box-shadow:0 18px 40px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.04);transform-style:preserve-3d}
+:root[data-look="cinema"] .card::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(360px circle at var(--mx,50%) var(--my,0%),rgba(230,180,90,.18),transparent 62%);opacity:0;transition:opacity .35s ease}
+:root[data-look="cinema"] .card:hover{border-color:var(--gold);transform:translateY(-5px);box-shadow:0 26px 50px rgba(0,0,0,.6),0 0 0 1px rgba(230,180,90,.25)}
+:root[data-look="cinema"] .card:hover::before{opacity:1}
+:root[data-look="cinema"] .card.nodata{background:transparent;box-shadow:none;border-style:dashed}
+:root[data-look="cinema"] .card.hasnew{border-color:var(--arx);box-shadow:0 18px 40px rgba(0,0,0,.45),0 0 24px rgba(77,155,255,.25)}
+:root[data-look="cinema"] .card .fio{font-family:var(--f-display);font-weight:500;font-size:19px;text-transform:uppercase;letter-spacing:.04em;line-height:1.15}
+:root[data-look="cinema"] .card .hosp{color:var(--muted);font-size:12px;letter-spacing:.02em}
+:root[data-look="cinema"] .card .ava{background:transparent;border:1px solid var(--gold);color:var(--gold);font-family:var(--f-display);font-size:13px;letter-spacing:.06em}
+:root[data-look="cinema"] .card.nodata .ava{border-color:var(--line);color:var(--muted)}
+:root[data-look="cinema"] .card .mets{border-top:1px solid #2A3348}
+:root[data-look="cinema"] .card .met .l{color:var(--gold);letter-spacing:.1em;font-size:10px}
+:root[data-look="cinema"] .card .met .v{font-family:var(--f-display);font-size:16px;font-weight:500;letter-spacing:.01em}
+:root[data-look="cinema"] .card svg.spark{border-top:4px dotted #334059;border-bottom:4px dotted #334059;padding:4px 0;height:56px;box-sizing:content-box}
+:root[data-look="cinema"] .card .yrow .cap{color:var(--dim);letter-spacing:.12em}
+:root[data-look="cinema"] .card .foot{color:var(--dim);letter-spacing:.03em}
+:root[data-look="cinema"] dialog{border-radius:8px;border:1px solid #2A3348;background:linear-gradient(180deg,#121826,#0B0F17)}
+:root[data-look="cinema"] dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(5px)}
+:root[data-look="cinema"] .dlg h2.name{font-family:var(--f-display);font-weight:500;font-size:30px;text-transform:uppercase;letter-spacing:.04em}
+:root[data-look="cinema"] .sec h3{color:var(--gold);letter-spacing:.14em;font-size:11px}
+:root[data-look="cinema"] .ask{background:linear-gradient(170deg,#161D2C,#10151F);border:1px solid #2A3348}
+:root[data-look="cinema"] .btn{background:var(--gold);color:#120D04}
+:root[data-look="cinema"] .btn.ghost{background:transparent;color:var(--ink);border-color:#334059}
+:root[data-look="cinema"] section.courses .tscroll{border-radius:6px}
+:root[data-look="cinema"] .lookbtn{border-color:var(--gold);color:var(--gold)}
+.lookbtn{margin-top:8px;background:transparent;border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:12px;cursor:pointer;color:var(--muted)}
+.lookbtn:hover{color:var(--ink);border-color:var(--ink)}
+/* анимации «Кино»: карточки выезжают с задержкой, диалог раскрывается как занавес, KPI проявляются */
+@media (prefers-reduced-motion:no-preference){
+  :root[data-look="cinema"] .card{animation:reel .7s cubic-bezier(.2,.7,.2,1) both;animation-delay:min(calc(var(--i,0)*45ms),900ms)}
+  :root[data-look="cinema"] .kpi{animation:reel .6s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0)*70ms)}
+  :root[data-look="cinema"] dialog[open]{animation:curtain .4s cubic-bezier(.2,.7,.2,1)}
+  :root[data-look="cinema"] .head{animation:reel .6s cubic-bezier(.2,.7,.2,1) both}
+  :root[data-look="cinema"] .card{transition:transform .35s cubic-bezier(.2,.7,.2,1),box-shadow .35s ease,border-color .35s ease}
+}
+@keyframes reel{from{opacity:0;transform:translateY(22px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes curtain{from{opacity:0;transform:scale(.96) translateY(14px)}to{opacity:1;transform:none}}
+
+
+#gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg)}
+.gate-card{width:100%;max-width:400px;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.25);padding:30px 28px;border-top:4px solid var(--arx)}
+.mark{font-weight:800;font-size:24px;letter-spacing:-.03em;line-height:1;color:var(--ink);font-family:var(--f-ui)}
+.mark b{color:var(--arx);font-weight:800}
+.brandmark{display:flex;flex-direction:column;gap:4px;margin-bottom:6px}
+.brandmark .eyebrow{font-size:11px}
+.gate-card h1{font-size:20px;margin:18px 0 6px;font-weight:600}
+.gate-card p{color:var(--muted);margin:0 0 18px;font-size:14px}
+.gate-card .lbl{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+.gate-card .field{display:flex;gap:8px}
+.pwwrap{position:relative;flex:1;min-width:0}
+.pwwrap input{width:100%;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:10px 40px 10px 12px;font-size:15px;color:var(--ink)}
+.eye{position:absolute;right:4px;top:4px;bottom:4px;width:32px;border:0;background:transparent;color:var(--muted);cursor:pointer;border-radius:6px}
+.eye svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8}
+.gate-card .err{color:var(--bad);font-size:13px;min-height:18px;margin-top:10px}
+:root[data-look="cinema"] .gate-card{background:linear-gradient(170deg,#141A27,#0E131D);border-top-color:var(--gold)}
+:root[data-look="cinema"] .mark b{color:var(--gold)}
+</style></head><body>
+<div id="gate">
+  <form class="gate-card" id="gateForm">
+    <div class="brandmark"><span class="mark" aria-label="MedEdScreeningAR">MedEdScreening<b>AR</b></span><span class="eyebrow">Arthrex MedEd · скрининг курсантов ЕОФ</span></div>
+    <h1>Вход</h1>
+    <p>Введите пароль этой недели. Его выдаёт администратор.</p>
+    <label class="lbl" for="pw">Пароль недели</label>
+    <div class="field">
+      <div class="pwwrap">
+        <input type="password" id="pw" autocomplete="current-password" autofocus required aria-describedby="pwErr">
+        <button type="button" class="eye" id="eye" aria-label="Показать пароль" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
+      <button class="btn" type="submit" id="pwBtn">Войти</button>
+    </div>
+    <div class="err" id="pwErr" role="alert"></div>
+  </form>
+</div>
+<div id="app" hidden>
+
+<div class="wrap">
+  <header class="head">
+    <div class="l">
+      <div class="brandmark"><span class="mark" aria-label="MedEdScreeningAR">MedEdScreening<b>AR</b></span><span class="eyebrow">Arthrex MedEd · скрининг курсантов ЕОФ</span></div>
+      <h1>Курсанты ЕОФ</h1>
+      <div class="sub" id="subtitle"></div>
+    </div>
+    <div class="r"><div id="asof"></div><button type="button" class="lookbtn" id="look">Вид: кино</button> <button type="button" class="lookbtn" id="logout">Выйти</button></div>
+  </header>
+
+  <div class="notice"><b>Первая версия.</b> Карточка — курсант на конкретном курсе; кто был на двух курсах, получает две карточки. Закупки присвоены всей клинике курсанта: если из клиники несколько курсантов, цифры у них одинаковые. Точный разбор по врачу — следующий шаг.</div>
+
+  <details class="method"><summary>Как считаем</summary><ul id="method"></ul></details>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="filters">
+    <input id="q" type="search" placeholder="Фамилия, клиника, город, ИНН" autocomplete="off">
+    <select id="f-course"></select>
+    <select id="f-type"><option value="">Колено и плечо</option><option value="Колено">Колено</option><option value="Плечо">Плечо</option></select>
+    <select id="f-group"></select>
+    <select id="f-sort">
+      <option value="new">Сначала новое</option>
+      <option value="arx_after">Arthrex после курса ↓</option>
+      <option value="delta">Прирост Arthrex ↓</option>
+      <option value="total_after">Все закупки после ↓</option>
+      <option value="date">Дата курса ↓</option>
+      <option value="fio">По фамилии</option>
+    </select>
+    <span class="count" id="count"></span>
+    <button class="reset" id="reset" type="button">Сбросить</button>
+  </div>
+  <div class="flagbar" id="flagbar"></div>
+
+  <p class="legend"><span><i style="background:var(--other)"></i>все артроскопические закупки клиники</span><span><i style="background:var(--arx)"></i>Arthrex</span><span>▏ курс карточки</span><span>┊ другие курсы курсанта</span><span>в карточке: млн ₽ за 12 месяцев до → после первого курса</span></p>
+  <div class="grid" id="grid"></div>
+
+  <section class="courses">
+    <h2>Курсы</h2>
+    <p class="sub" style="margin:0 0 10px">Суммы по уникальным клиникам курсантов, окно «после» считается от этого курса. Клик по строке — отфильтровать карточки.</p>
+    <div class="tscroll"><table id="courses"></table></div>
+  </section>
+</div>
+
+<dialog id="dlg"><div class="dlg" id="dlg-body"></div></dialog>
+
+</div><script>
+function boot(D) {
+const T = D.trainees;
+for (const t of T) if (t.data && D.clinics[t.inn]) Object.assign(t.data, D.clinics[t.inn]);
+const SEGK = ['sh', 'kn', 'imp', 'cons', 'ins', 'eq'];
+const BRAND_COLOR = {'Arthrex':'var(--arx)','Smith & Nephew':'var(--b2)','J&J':'var(--b3)','Stryker':'var(--b4)','Zimmer & SBM':'var(--b5)','Не определён':'var(--unk)'};
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt = (v, d=1) => v == null ? '—' : v.toLocaleString('ru-RU', {minimumFractionDigits:d, maximumFractionDigits:d});
+const pct = v => v == null ? '—' : Math.round(v*100) + '%';
+const mLabel = m => { const [y, mo] = m.split('-'); return ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'][+mo-1] + ' ' + y; };
+const dLabel = d => { const [y, m, dd] = d.split('-'); return `${+dd} ${['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'][+m-1]} ${y}`; };
+const ini = fio => fio.split(/\s+/).slice(0,2).map(w => w[0] || '').join('').toUpperCase();
+const mIdx = d => D.months.indexOf(d.slice(0,7));
+const MD_IDX = mIdx(D.asof.mdpro);
+const state = {q:'', course:'', type:'', group:'', flag:'', sort:'arx_after'};
+
+// ---------- заголовок
+$('#asof').innerHTML = `МД Про по <b class="num">${dLabel(D.asof.mdpro)}</b>Тендерплан по <b class="num">${dLabel(D.asof.tp)}</b>собрано ${dLabel(D.asof.built)}`;
+$('#method').innerHTML = D.method.map(m => `<li>${esc(m)}</li>`).join('');
+const persons = new Set(T.map(t => t.person)).size, withInn = new Set(T.filter(t => t.inn).map(t => t.person)).size, clinics = new Set(T.filter(t => t.inn).map(t => t.inn)).size;
+$('#subtitle').textContent = `${T.length} карточек: ${persons} курсантов на ${D.courses.length} курсах 2024–2026. У ${withInn} курсантов клиника видна в госзакупках (${clinics} клиник).` + (D.new ? ` Новое за ${D.new.days} дней: ${D.new.rows} закупок в ${D.new.clinics} клиниках${D.new.live ? `, ${D.new.live} идут сейчас` : ''}.` : '');
+
+// ---------- фильтры
+$('#f-course').innerHTML = '<option value="">Все курсы</option>' + [...D.courses].reverse().map(c => `<option value="${esc(c.course)}">${esc(c.course)}</option>`).join('');
+$('#f-group').innerHTML = '<option value="">Все клиники</option><option value="__data">Есть закупки в данных</option>' + Object.entries(D.group_label).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('');
+for (const [id, key] of [['#q','q'],['#f-course','course'],['#f-type','type'],['#f-group','group'],['#f-sort','sort']])
+  $(id).addEventListener('input', e => { state[key] = e.target.value; render(); });
+$('#reset').onclick = () => { Object.assign(state, {q:'', course:'', type:'', group:'', flag:'', sort:'arx_after'}); $('#q').value=''; $('#f-course').value=''; $('#f-type').value=''; $('#f-group').value=''; $('#f-sort').value='arx_after'; render(); };
+
+function filtered() {
+  const q = state.q.trim().toLowerCase().replace(/ё/g,'е');
+  return T.filter(t => {
+    if (q && !(t.fio + ' ' + t.hospital + ' ' + t.customer + ' ' + t.city + ' ' + t.inn).toLowerCase().replace(/ё/g,'е').includes(q)) return false;
+    if (state.course && t.course !== state.course) return false;
+    if (state.type && t.type !== state.type) return false;
+    if (state.group === '__data') { if (!t.data || t.data.whole.total === 0) return false; }
+    else if (state.group && t.group !== state.group) return false;
+    if (state.flag === 'has_new') { if (!(t.data && t.data.new_n > 0)) return false; }
+    else if (state.flag && !(t.data && t.data.flags.includes(state.flag))) return false;
+    return true;
+  });
+}
+const aft = t => t.data ? t.data.after.arx : -1, tot = t => t.data ? t.data.after.total : -1;
+const delta = t => t.data ? t.data.after.arx - t.data.before.arx : -1e9;
+const newn = t => t.data ? t.data.new_n || 0 : -1;
+const SORT = {
+  new: (a, b) => newn(b) - newn(a) || aft(b) - aft(a) || a.fio.localeCompare(b.fio, 'ru'),
+  arx_after: (a, b) => aft(b) - aft(a) || tot(b) - tot(a) || a.fio.localeCompare(b.fio, 'ru'),
+  delta: (a, b) => delta(b) - delta(a) || a.fio.localeCompare(b.fio, 'ru'),
+  total_after: (a, b) => tot(b) - tot(a) || a.fio.localeCompare(b.fio, 'ru'),
+  date: (a, b) => b.date.localeCompare(a.date) || a.fio.localeCompare(b.fio, 'ru'),
+  fio: (a, b) => a.fio.localeCompare(b.fio, 'ru'),
+};
+
+// ---------- сводка по карточкам
+function kpis(list) {
+  const withData = list.filter(t => t.data && t.data.whole.total > 0);
+  const seen = new Set(); let ab = 0, aa = 0, tb = 0, ta = 0, nFull = 0;
+  for (const t of [...withData].sort((x, y) => x.date.localeCompare(y.date))) {
+    if (seen.has(t.inn) || t.data.after.status !== 'полное') continue;
+    seen.add(t.inn); nFull++;
+    ab += t.data.before.arx; aa += t.data.after.arx; tb += t.data.before.total; ta += t.data.after.total;
+  }
+  const d = aa - ab, cls = d >= 0 ? 'up' : 'down';
+  const flags = f => list.filter(t => t.data && t.data.flags.includes(f)).length;
+  return [
+    ['Карточек', list.length, `${new Set(list.map(t => t.person)).size} курсантов, ${list.filter(t => t.inn).length} с ИНН клиники`],
+    ['Закупки видны', withData.length, `${new Set(withData.map(t => t.person)).size} курсантов, ${new Set(withData.map(t => t.inn)).size} клиник`],
+    ['Arthrex до → после', `<span class="num">${fmt(ab)}</span><span class="arrow">→</span><span class="num">${fmt(aa)}</span> <span class="delta ${cls}">${d>=0?'+':''}${fmt(d)}</span>`, `млн ₽, ${nFull} клиник с полным окном, по самому раннему курсу`, 'arx'],
+    ['Все закупки до → после', `<span class="num">${fmt(tb,0)}</span><span class="arrow">→</span><span class="num">${fmt(ta,0)}</span>`, `млн ₽, те же клиники`],
+    ['Начали или нарастили Arthrex', flags('arx_new') + flags('arx_up'), `${flags('arx_new')} начали, ${flags('arx_up')} нарастили`],
+    ['Ждём окно «после»', flags('wait'), 'после курса меньше 3 месяцев'],
+    (() => { const seen = new Set(); let n = 0, s = 0, a = 0, live = 0; for (const t of list) { if (!t.data || seen.has(t.inn)) continue; seen.add(t.inn); n += t.data.new_n || 0; s += t.data.new_sum || 0; a += t.data.new_arx || 0; live += t.data.new_live || 0; } return [`Новое за ${D.new ? D.new.days : 7} дней`, `<span class="num">${n}</span>`, `закупок, ${fmt(s)} млн, Arthrex ${fmt(a)}${live ? `, ${live} идут сейчас` : ''}`, n ? 'newk' : '']; })(),
+  ].map(([l, v, d, c], i) => `<div class="kpi ${c||''}" style="--i:${i}"><div class="l">${l}</div><div class="v">${v}</div><div class="d">${d}</div></div>`).join('');
+}
+function flagbar(list) {
+  const nn = list.filter(t => t.data && t.data.new_n > 0).length;
+  const first = `<button type="button" class="chip new ${state.flag==='has_new'?'on':''}" data-flag="has_new" title="Появились новые закупки или сменилась стадия за последние ${D.new ? D.new.days : 7} дней">Есть новое <span class="n">${nn}</span></button>`;
+  return first + Object.entries(D.flag_meta).map(([k, [lab, desc, cls]]) => {
+    const n = list.filter(t => t.data && t.data.flags.includes(k)).length;
+    return `<button type="button" class="chip ${cls} ${state.flag===k?'on':''}" data-flag="${k}" title="${esc(desc)}">${lab} <span class="n">${n}</span></button>`;
+  }).join('');
+}
+
+// ---------- карточка
+function spark(t) {
+  const s = t.data.series, n = s.t.length, W = 300, H = 46, max = Math.max(1, ...s.t);
+  const bw = W / n;
+  let out = `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-label="Закупки клиники по месяцам">`;
+  out += `<line x1="0" y1="${H-.5}" x2="${W}" y2="${H-.5}" stroke="var(--line)"/>`;
+  if (MD_IDX >= 0) out += `<line x1="${(MD_IDX+1)*bw}" y1="2" x2="${(MD_IDX+1)*bw}" y2="${H}" stroke="var(--line)" stroke-dasharray="2 3"/>`;
+  for (let i = 0; i < n; i++) {
+    const h = s.t[i] / max * (H - 4), ha = s.a[i] / max * (H - 4);
+    if (s.t[i]) out += `<rect x="${(i*bw+.6).toFixed(1)}" y="${(H-1-h).toFixed(1)}" width="${(bw-1.2).toFixed(1)}" height="${h.toFixed(1)}" fill="var(--other)"/>`;
+    if (s.a[i]) out += `<rect x="${(i*bw+.6).toFixed(1)}" y="${(H-1-ha).toFixed(1)}" width="${(bw-1.2).toFixed(1)}" height="${ha.toFixed(1)}" fill="var(--arx)"/>`;
+  }
+  for (const p of t.parts) { const k = mIdx(p.date); if (k >= 0) out += `<line x1="${(k*bw).toFixed(1)}" y1="0" x2="${(k*bw).toFixed(1)}" y2="${H}" stroke="var(--ink)" stroke-width="${p.own?2:1}" ${p.own?'':'stroke-dasharray="2 2" opacity=".6"'}/>`; }
+  return out + '</svg>';
+}
+function ybars(t) {
+  const ys = t.data.years; if (!ys.length) return '';
+  const y0 = ys[0].y, y1 = ys[ys.length - 1].y, n = y1 - y0 + 1, W = 300, H = 30, bw = W / n, max = Math.max(1, ...ys.map(r => r.total));
+  const byY = Object.fromEntries(ys.map(r => [r.y, r]));
+  let out = `<div class="yrow"><span class="cap">по годам, ${y0}–${y1}</span><svg class="ybars" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-label="Закупки клиники по годам">`;
+  for (let i = 0; i < n; i++) { const r = byY[y0 + i]; if (!r) continue; const hh = r.total / max * (H - 2), ha = r.arx / max * (H - 2);
+    out += `<rect x="${(i*bw+1).toFixed(1)}" y="${(H-hh).toFixed(1)}" width="${(bw-2).toFixed(1)}" height="${hh.toFixed(1)}" fill="var(--other)"/>`;
+    if (r.arx) out += `<rect x="${(i*bw+1).toFixed(1)}" y="${(H-ha).toFixed(1)}" width="${(bw-2).toFixed(1)}" height="${ha.toFixed(1)}" fill="var(--arx)"/>`; }
+  for (const p of t.parts) { const k = +p.date.slice(0, 4) - y0; if (k >= 0 && k < n) out += `<line x1="${(k*bw).toFixed(1)}" x2="${(k*bw).toFixed(1)}" y1="0" y2="${H}" stroke="var(--ink)" stroke-width="${p.own?1.5:1}" ${p.own?'':'stroke-dasharray="2 2" opacity=".6"'}/>`; }
+  return out + '</svg></div>';
+}
+const courseChip = p => `<span class="chip course ${p.type==='Колено'?'kn':'sh'} ${p.own?'own':'other'}" title="${p.own?'курс этой карточки':'другой курс курсанта'}">${esc(p.course)}</span>`;
+const courseChips = t => t.parts.filter(p => p.own).map(courseChip).join('') + (t.n_courses > 1 ? `<span class="also">также:</span>` + t.parts.filter(p => !p.own).map(courseChip).join('') : '');
+const flagChips = t => t.data.flags.map(f => { const [lab,, cls] = D.flag_meta[f]; return `<span class="chip ${cls}">${lab}</span>`; }).join('');
+function card(t) {
+  const d = t.data;
+  if (!d || d.whole.total === 0) {
+    const why = !d ? (t.note || D.group_label[t.group]) : (d.flags.includes('no_sales') ? 'ИНН известен, но артроскопических закупок в МД Про и Тендерплане нет' : '');
+    return `<button type="button" class="card nodata" data-id="${t.id}"><div class="who"><div class="ava">${ini(t.fio)}</div><div class="t"><div class="fio">${esc(t.fio)}</div><div class="hosp">${esc(t.hospital || 'место работы не известно')}${t.city?', '+esc(t.city):''}</div></div></div>
+      <div class="chips">${courseChips(t)}</div><div class="reason">${esc(why)}${t.survey?' · есть анкета':''}</div></button>`;
+  }
+  const b = d.before, a = d.after, dl = a.arx - b.arx;
+  const afterNote = a.status === 'полное' ? '' : ` <small>${a.status === 'нет' ? 'нет данных' : a.status}</small>`;
+  const newChip = d.new_n ? `<span class="chip new" title="новых закупок за ${D.new ? D.new.days : 7} дней, ${fmt(d.new_sum)} млн">${d.new_n} нов${d.new_n === 1 ? 'ая' : d.new_n < 5 ? 'ые' : 'ых'}${d.new_live ? ` · ${d.new_live} идут` : ''}</span>` : '';
+  return `<button type="button" class="card ${d.new_n ? 'hasnew' : ''}" data-id="${t.id}">
+    <div class="who"><div class="ava">${ini(t.fio)}</div><div class="t"><div class="fio">${esc(t.fio)}</div><div class="hosp">${esc(t.hospital)}${t.city?', '+esc(t.city):''}</div></div></div>
+    <div class="chips">${newChip}${courseChips(t)}${flagChips(t)}</div>
+    <div class="mets">
+      <div class="met arx"><div class="l">Arthrex</div><div class="v">${fmt(b.arx)} → ${fmt(a.arx)}${afterNote}</div></div>
+      <div class="met"><div class="l">Все закупки</div><div class="v">${fmt(b.total)} → ${fmt(a.total)}</div></div>
+      <div class="met"><div class="l">Доля</div><div class="v">${pct(b.share)} → ${pct(a.share)}</div></div>
+    </div>
+    ${ybars(t)}
+    ${spark(t)}
+    <div class="foot"><span>${d.src}${d.shared_with ? ` · общие с ${d.shared_with} курсант${d.shared_with===1?'ом':'ами'}` : ''}</span><span>${d.fresh.length ? d.fresh.length + ' свежих торгов' : ''}</span></div>
+  </button>`;
+}
+
+// ---------- курсы
+function coursesTable(list) {
+  const ids = new Set(list.map(t => t.id));
+  const rows = D.courses.map(c => {
+    const n = T.filter(t => ids.has(t.id) && t.course === c.course).length;
+    const d = c.arx_after - c.arx_before;
+    return `<tr class="crow ${state.course===c.course?'on':''}" data-course="${esc(c.course)}"><td>${esc(c.course)}</td><td class="n">${n}</td><td class="n">${c.with_inn}</td><td class="n">${c.clinics}<small style="color:var(--muted)"> / ${c.mdpro}</small></td>
+      <td class="n">${fmt(c.total_before)} → ${fmt(c.total_after)}</td><td class="n arx">${fmt(c.arx_before)} → ${fmt(c.arx_after)}</td><td class="n ${d>=0?'up':'down'}">${c.window==='полное' ? (d>=0?'+':'')+fmt(d) : '<span style="color:var(--muted);font-weight:400">'+c.window+'</span>'}</td></tr>`;
+  }).join('');
+  return `<thead><tr><th>Курс</th><th class="n">Карточек</th><th class="n">С ИНН</th><th class="n">Клиник / в МД Про</th><th class="n">Все закупки, млн</th><th class="n">Arthrex, млн</th><th class="n">Δ Arthrex</th></tr></thead><tbody>${rows}</tbody>`;
+}
+
+function render() {
+  const list = filtered().sort(SORT[state.sort]);
+  $('#kpis').innerHTML = kpis(list);
+  $('#flagbar').innerHTML = flagbar(filtered());
+  $('#count').textContent = `${list.length} из ${T.length}`;
+  $('#grid').innerHTML = list.length ? list.map((t, i) => card(t).replace('<button type="button" class="card', `<button type="button" style="--i:${i}" class="card`)).join('') : '<div class="empty">Никого не найдено. Сбросьте фильтры.</div>';
+  $('#courses').innerHTML = coursesTable(list);
+}
+$('#flagbar').addEventListener('click', e => { const b = e.target.closest('[data-flag]'); if (!b) return; state.flag = state.flag === b.dataset.flag ? '' : b.dataset.flag; render(); });
+$('#grid').addEventListener('click', e => { const c = e.target.closest('.card'); if (c) openCard(+c.dataset.id); });
+$('#courses').addEventListener('click', e => { const r = e.target.closest('tr.crow'); if (!r) return; state.course = state.course === r.dataset.course ? '' : r.dataset.course; $('#f-course').value = state.course; render(); window.scrollTo({top: $('#grid').offsetTop - 80, behavior: 'smooth'}); });
+
+// ---------- подробная карточка
+function winTable(b, a) {
+  const rows = [['Все закупки', 'total'], ['Arthrex', 'arx'], ['Доля Arthrex', 'share'], ['Колено: импланты', 'kn'], ['Плечо: импланты', 'sh'], ['Другие импланты', 'imp'], ['Расходка', 'cons'], ['Инструменты', 'ins'], ['Оборудование', 'eq'],
+    ['Якоря, шт', 'anchors'], ['из них Arthrex, шт', 'anchors_arx'], ['безузловые, шт', 'kl'], ['узловые, шт', 'kd'], ['титановые, шт', 'ti']];
+  const v = (w, k) => k === 'share' ? pct(w[k]) : (['anchors','anchors_arx','kl','kd','ti'].includes(k) ? w[k] : fmt(w[k]));
+  return `<div class="tscroll"><table><thead><tr><th></th><th class="n">12 мес до</th><th class="n">12 мес после</th><th class="n">Δ</th></tr></thead><tbody>${rows.map(([l, k]) => {
+    const d = ['share'].includes(k) ? null : a[k] - b[k];
+    return `<tr><td>${l}</td><td class="n ${k==='arx'?'arx':''}">${v(b,k)}</td><td class="n ${k==='arx'?'arx':''}">${v(a,k)}</td><td class="n ${d>0?'up':d<0?'down':''}">${d==null?'':(d>0?'+':'')+(Number.isInteger(b[k])&&Number.isInteger(a[k])&&!['total','arx','kn','sh','imp','cons','ins','eq'].includes(k)?d:fmt(d))}</td></tr>`;
+  }).join('')}</tbody></table></div>
+  <div class="note">Окно «до»: ${b.src || 'нет закупок'} · «после»: ${a.src || 'нет закупок'}${a.status !== 'полное' ? ` · данных после курса ${a.status === 'нет' ? 'ещё нет' : 'только ' + a.status}` : ''}. Тип якорей известен только по МД Про.</div>`;
+}
+function brandBars(b, a) {
+  const all = {}; for (const w of [b, a]) for (const [n, v] of w.brands) all[n] = (all[n] || 0) + v;
+  const names = Object.keys(all).sort((x, y) => all[y] - all[x]);
+  const col = n => BRAND_COLOR[n] || 'var(--other)';
+  const row = (lab, w) => `<div class="bar"><span class="lab">${lab}</span><div class="trk" title="${esc(w.brands.map(([n,v])=>n+' '+fmt(v)).join(', '))}">${w.total ? w.brands.map(([n, v]) => `<i style="width:${(v / w.total * 100).toFixed(1)}%;background:${col(n)}"></i>`).join('') : ''}</div></div>`;
+  return `<div class="bars">${row('до', b)}${row('после', a)}</div><div class="blegend">${names.map(n => `<span><i style="background:${col(n)}"></i>${esc(n)} <span class="num">${fmt(all[n])}</span></span>`).join('')}</div>`;
+}
+function monthly(t) {
+  const s = t.data.series, n = s.t.length, W = 760, H = 220, L = 44, B = 26, Tp = 10, ph = H - B - Tp, pw = W - L - 6;
+  const max = Math.max(1, ...s.t), bw = pw / n;
+  const y = v => Tp + ph - v / max * ph;
+  let out = `<svg class="monthly" viewBox="0 0 ${W} ${H}" aria-label="Закупки клиники по месяцам, тыс. ₽">`;
+  const ticks = [0, .5, 1].map(f => Math.round(max * f));
+  for (const v of ticks) out += `<line x1="${L}" x2="${W-6}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" stroke="var(--line)"/><text x="${L-6}" y="${(y(v)+4).toFixed(1)}" text-anchor="end" font-size="10" font-family="var(--f-num)" fill="var(--muted)">${v >= 1000 ? (v/1000).toFixed(1) + ' млн' : v + ' т'}</text>`;
+  D.months.forEach((m, i) => { if (m.endsWith('-01')) out += `<text x="${(L + i*bw + 2).toFixed(1)}" y="${H-8}" font-size="11" fill="var(--muted)" font-family="var(--f-num)">${m.slice(0,4)}</text><line x1="${(L+i*bw).toFixed(1)}" x2="${(L+i*bw).toFixed(1)}" y1="${Tp}" y2="${H-B+4}" stroke="var(--line)"/>`; });
+  if (MD_IDX >= 0) { const x = L + (MD_IDX+1)*bw; out += `<line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${Tp}" y2="${H-B}" stroke="var(--muted)" stroke-dasharray="3 4"/><text x="${(x-4).toFixed(1)}" y="${Tp+10}" text-anchor="end" font-size="10" fill="var(--muted)">МД Про</text><text x="${(x+4).toFixed(1)}" y="${Tp+10}" font-size="10" fill="var(--muted)">Тендерплан</text>`; }
+  for (let i = 0; i < n; i++) {
+    const x = L + i*bw + 1, w = Math.max(1, bw - 2);
+    out += `<g class="mb" data-i="${i}"><rect x="${x.toFixed(1)}" y="${Tp}" width="${w.toFixed(1)}" height="${ph}" fill="transparent"/>`;
+    if (s.t[i]) out += `<rect x="${x.toFixed(1)}" y="${y(s.t[i]).toFixed(1)}" width="${w.toFixed(1)}" height="${(Tp+ph-y(s.t[i])).toFixed(1)}" rx="1.5" fill="var(--other)"/>`;
+    if (s.a[i]) out += `<rect x="${x.toFixed(1)}" y="${y(s.a[i]).toFixed(1)}" width="${w.toFixed(1)}" height="${(Tp+ph-y(s.a[i])).toFixed(1)}" rx="1.5" fill="var(--arx)"/>`;
+    out += '</g>';
+  }
+  t.parts.forEach((p, q) => { const k = mIdx(p.date); if (k >= 0) { const x = L + k*bw; out += `<line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${Tp}" y2="${H-B}" stroke="var(--ink)" stroke-width="${p.own?2:1}" ${p.own?'':'stroke-dasharray="3 3" opacity=".6"'}/><text x="${(x+3).toFixed(1)}" y="${Tp+ph-4-(q%3)*12}" font-size="10" font-weight="${p.own?'600':'400'}" fill="var(--ink)">${p.type.toLowerCase()} ${p.date.slice(0,7).split('-').reverse().join('.')}</text>`; } });
+  return out + '</svg><div class="tip" id="tip"></div>';
+}
+function history(t) {
+  const d = t.data, ys = d.years; if (!ys.length) return '';
+  const col = n => BRAND_COLOR[n] || 'var(--other)';
+  const allB = {}; for (const r of ys) for (const [n, v] of r.brands) allB[n] = (allB[n] || 0) + v;
+  const bnames = Object.keys(allB).sort((x, y) => allB[y] - allB[x]).slice(0, 8);
+  const rows = ys.map(r => `<tr><td class="num">${r.y}</td><td class="n">${r.n}</td><td class="n">${fmt(r.total)}</td><td class="n arx">${fmt(r.arx)}</td><td class="n">${r.total ? pct(r.arx / r.total) : '—'}</td><td class="n">${fmt(r.sh)}<small style="color:var(--muted)">${r.sh_arx ? ' / ' + fmt(r.sh_arx) : ''}</small></td><td class="n">${fmt(r.kn)}<small style="color:var(--muted)">${r.kn_arx ? ' / ' + fmt(r.kn_arx) : ''}</small></td><td class="n">${fmt(r.eq)}</td><td class="n">${fmt(r.cons + r.ins + r.imp)}</td><td class="n">${r.anchors || ''}</td><td style="color:var(--muted);white-space:nowrap">${esc(r.suppliers[0] ? r.suppliers[0][0] : '')}</td><td style="color:var(--muted)">${r.src}</td></tr>`).join('');
+  const bars = ys.map(r => `<div class="ybrand"><span class="num">${r.y}</span><div class="trk" title="${esc(r.brands.map(([n,v])=>n+' '+fmt(v)).join(', '))}">${r.total ? r.brands.map(([n, v]) => `<i style="width:${(v / r.total * 100).toFixed(1)}%;background:${col(n)}"></i>`).join('') : ''}</div><span class="num">${fmt(r.total)} млн</span></div>`).join('');
+  return `<div class="sec"><h3>Вся история клиники: ${ys[0].y}–${ys[ys.length-1].y}, млн ₽</h3>
+    <div class="tscroll"><table><thead><tr><th>Год</th><th class="n">Закупок</th><th class="n">Всего</th><th class="n">Arthrex</th><th class="n">Доля</th><th class="n">Плечо / Arx</th><th class="n">Колено / Arx</th><th class="n">Оборуд.</th><th class="n">Расходка и пр.</th><th class="n">Якоря, шт</th><th>Главный поставщик</th><th>Источник</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="note">Плечо и колено — импланты. «Расходка и пр.» — расходка к стойке, шовный материал, инструменты, другие импланты. До 2024 и после ${dLabel(D.asof.mdpro)} бренд оценён по поставщику.</div></div>
+    <div class="two"><div class="sec"><h3>Бренды по годам</h3><div class="bars">${bars}</div><div class="blegend">${bnames.map(n => `<span><i style="background:${col(n)}"></i>${esc(n)} <span class="num">${fmt(allB[n])}</span></span>`).join('')}</div></div>
+    <div class="sec"><h3>Главные поставщики по годам</h3><div class="kv">${ys.slice().reverse().map(r => `<div class="num">${r.y}</div><div>${r.suppliers.map(([s, v]) => esc(s) + ' <span class="num" style="color:var(--muted)">' + fmt(v) + '</span>').join('<br>') || '—'}</div>`).join('')}</div></div></div>
+    <div class="sec" id="ex"></div>`;
+}
+// ---------- проводник закупок клиники и «Спроси Claude»
+let SAMPLE, DL;
+const SITE_MODE = !(window.claude && window.claude.use);   // сайт вне claude.ai: без «Спроси Claude», CSV обычной ссылкой
+(async () => { try { if (window.claude && window.claude.use) { SAMPLE = await claude.use('sample'); DL = await claude.use('downloads'); } else { SAMPLE = null; DL = null; } } catch (e) { SAMPLE = null; DL = null; } })();
+const SRC_LABEL = {tp: 'Тендерплан', md: 'МД Про'};
+let EX = null;
+function purchLi(r) {
+  const anch = r.src === 'md' && (r.kl || r.kd || r.ti) ? ` · якоря: безузловых ${r.kl}, узловых ${r.kd}, титан ${r.ti}` : '';
+  return `<li class="${r.new ? 'new' : ''}"><div class="h"><b>${r.new ? `<span class="stagepill new">новое${r.since ? ' с ' + dLabel(r.since) : ''}</span> ` : ''}<span class="stagepill ${r.st==='идёт приём заявок'?'live':''}">${r.st}</span> <span class="stagepill">${SRC_LABEL[r.src]}</span> ${dLabel(r.d)} · ${fmt(r.sum)} млн${r.arx ? ` · <span style="color:var(--arx)">Arthrex ${fmt(r.arx)}</span>` : ''}</b><span class="num" style="color:var(--muted)">${r.num || (r.fz ? 'ФЗ ' + r.fz : '')}</span></div>
+    <div class="s">${esc(r.sup)} → ${(r.brs.filter(([, v], i) => i === 0 || v >= 0.05)).map(([b, v]) => esc(b) + ' ' + fmt(v)).join(', ')}${r.bsrc === 'поставщик' ? ' (бренд по поставщику)' : ''}${r.segs.length ? ' · ' + r.segs.map(([k, v]) => D.seg_label[k] + ' ' + fmt(v)).join(', ') : ''}${anch}</div>
+    ${r.title ? `<div class="s">${esc(r.title)}</div>` : ''}<div class="s">${r.items.map(([p, v]) => esc(p) + ' ' + fmt(v)).join(' · ')}</div></li>`;
+}
+function exInit(t) { EX = {t, src: 'stitch', year: '', seg: '', brand: '', sup: '', stage: '', arx: false, onlynew: false, q: '', sort: 'date', limit: 50}; }
+function exRows() {
+  const rows = EX.t.data.purch.filter(r => {
+    if (EX.src === 'stitch' && !r.stitch) return false;
+    if ((EX.src === 'tp' || EX.src === 'md') && r.src !== EX.src) return false;
+    if (EX.year && !r.d.startsWith(EX.year)) return false;
+    if (EX.seg && !r.segs.some(([k]) => k === EX.seg)) return false;
+    if (EX.brand && !r.brs.some(([b]) => b === EX.brand)) return false;
+    if (EX.sup && r.sup !== EX.sup) return false;
+    if (EX.stage && r.st !== EX.stage) return false;
+    if (EX.arx && !(r.arx > 0)) return false;
+    if (EX.onlynew && !r.new) return false;
+    if (EX.q) { const q = EX.q.toLowerCase().replace(/ё/g, 'е'); if (!(r.title + ' ' + r.sup + ' ' + r.num + ' ' + r.items.map(i => i[0]).join(' ') + ' ' + r.brs.map(b => b[0]).join(' ')).toLowerCase().replace(/ё/g, 'е').includes(q)) return false; }
+    return true;
+  });
+  rows.sort(EX.sort === 'sum' ? (a, b) => b.sum - a.sum : EX.sort === 'arx' ? (a, b) => b.arx - a.arx || b.sum - a.sum : (a, b) => b.d.localeCompare(a.d));
+  return rows;
+}
+const opts = (list, all) => `<option value="">${all}</option>` + list.map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join('');
+function renderExFilters() {
+  const P = EX.t.data.purch, hasMd = P.some(r => r.src === 'md');
+  const years = [...new Set(P.map(r => r.d.slice(0, 4)))].sort().reverse();
+  const cnt = f => { const m = {}; for (const r of P) for (const k of f(r)) m[k] = (m[k] || 0) + r.sum; return Object.entries(m).sort((a, b) => b[1] - a[1]); };
+  const brands = cnt(r => r.brs.map(b => b[0])).slice(0, 15), sups = cnt(r => [r.sup]).slice(0, 25), stages = [...new Set(P.map(r => r.st))];
+  $('#ex').innerHTML = `<h3>Закупки клиники: ${P.filter(r => r.src === 'tp').length} по Тендерплану${hasMd ? `, ${P.filter(r => r.src === 'md').length} контрактов МД Про` : ''}</h3>
+    <div class="exf">
+      <select data-ex="src" title="Источник"><option value="stitch">Как в суммах: МД Про + Тендерплан вне МД Про</option><option value="all">Всё, включая дубли за период МД Про</option><option value="tp">Только Тендерплан</option>${hasMd ? '<option value="md">Только МД Про</option>' : ''}</select>
+      <select data-ex="year">${opts(years.map(y => [y, y]), 'Все годы')}</select>
+      <select data-ex="seg">${opts(Object.entries(D.seg_label), 'Все сегменты')}</select>
+      <select data-ex="brand">${opts(brands.map(([b, v]) => [b, `${b} · ${fmt(v)} млн`]), 'Все бренды')}</select>
+      <select data-ex="sup">${opts(sups.map(([s, v]) => [s, `${s.slice(0, 40)} · ${fmt(v)}`]), 'Все поставщики')}</select>
+      <select data-ex="stage">${opts(stages.map(s => [s, s]), 'Любая стадия')}</select>
+      <select data-ex="sort"><option value="date">Сначала новые</option><option value="sum">По сумме</option><option value="arx">По сумме Arthrex</option></select>
+      <label class="chk"><input type="checkbox" data-ex="arx"> только с Arthrex</label>
+      <label class="chk"><input type="checkbox" data-ex="onlynew" ${P.some(r => r.new) ? '' : 'disabled'}> только новое</label>
+      <input type="search" data-ex="q" placeholder="Поиск: позиция, название, поставщик, номер">
+    </div><div id="exbody"></div>`;
+}
+function renderExBody() {
+  const rows = exRows(), shown = rows.slice(0, EX.limit);
+  const tot = rows.reduce((s, r) => s + r.sum, 0), arx = rows.reduce((s, r) => s + r.arx, 0);
+  const kl = rows.reduce((s, r) => s + (r.kl || 0), 0), kd = rows.reduce((s, r) => s + (r.kd || 0), 0), ti = rows.reduce((s, r) => s + (r.ti || 0), 0);
+  const segm = {}; for (const r of rows) for (const [k, v] of r.segs) segm[k] = (segm[k] || 0) + v;
+  const segs = Object.entries(segm).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([k, v]) => `${D.seg_label[k]} ${fmt(v)}`).join(' · ');
+  EX.rows = rows;
+  const nnew = rows.filter(r => r.new).length;
+  $('#exbody').innerHTML = `<div class="exsum"><span><b class="num">${rows.length}</b> закупок · <b class="num">${fmt(tot)}</b> млн · Arthrex <b class="num" style="color:var(--arx)">${fmt(arx)}</b> (${tot ? Math.round(arx / tot * 100) : 0}%)${nnew ? ` · <span style="color:var(--arx)">новых ${nnew}</span>` : ''}${kl + kd ? ` · якоря: безузловых ${kl}, узловых ${kd}, титан ${ti}` : ''}${segs ? '<br><span class="note">' + segs + '</span>' : ''}</span>
+      <span class="exbtn">${DL || SITE_MODE ? '<button type="button" class="btn ghost" data-csv>Скачать CSV</button>' : ''}<button type="button" class="btn ghost" data-copy>Копировать таблицу</button></span></div>
+    <ul class="list">${shown.map(purchLi).join('') || '<li class="note">Ничего не найдено под эти фильтры.</li>'}</ul>
+    ${rows.length > shown.length ? `<button type="button" class="btn ghost" data-more>Показать ещё ${Math.min(100, rows.length - shown.length)} из ${rows.length - shown.length}</button>` : ''}`;
+}
+function exTable(rows, sep) {
+  const H = ['Дата', 'Источник', 'Стадия', 'Номер', 'Поставщик', 'Бренды', 'Сумма, млн', 'Arthrex, млн', 'Сегменты', 'Безузловые', 'Узловые', 'Титан', 'Название', 'Позиции'];
+  const cell = v => { v = String(v ?? ''); return sep === ',' ? '"' + v.replace(/"/g, '""') + '"' : v.replace(/[\t\n]/g, ' '); };
+  return [H, ...rows.map(r => [r.d, SRC_LABEL[r.src], r.st, r.num, r.sup, r.brs.map(([b, v]) => b + ' ' + v).join('; '), r.sum, r.arx, r.segs.map(([k, v]) => D.seg_label[k] + ' ' + v).join('; '), r.kl ?? '', r.kd ?? '', r.ti ?? '', r.title, r.items.map(([p, v]) => p + ' ' + v).join('; ')])].map(row => row.map(cell).join(sep)).join('\n');
+}
+$('#dlg-body').addEventListener('input', e => { const el = e.target.closest('[data-ex]'); if (!el || !EX) return; EX[el.dataset.ex] = el.type === 'checkbox' ? el.checked : el.value; EX.limit = 50; renderExBody(); });
+$('#dlg-body').addEventListener('click', async e => {
+  if (!EX) return;
+  if (e.target.closest('[data-more]')) { EX.limit += 100; renderExBody(); return; }
+  if (e.target.closest('[data-copy]')) { const b = e.target.closest('[data-copy]'); try { await navigator.clipboard.writeText(exTable(EX.rows, '\t')); b.textContent = 'Скопировано'; } catch (err) { b.textContent = 'Не удалось скопировать'; } setTimeout(() => b.textContent = 'Копировать таблицу', 2000); return; }
+  if (e.target.closest('[data-csv]')) { const b = e.target.closest('[data-csv]'); const fn = `закупки_${EX.t.inn}_${EX.t.fio.split(' ')[0]}.csv`, csv = '\ufeff' + exTable(EX.rows, ','); try { if (DL) await DL.save({filename: fn, data: csv}); else { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv;charset=utf-8'})); a.download = fn; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); } b.textContent = 'Сохранено'; } catch (err) { b.textContent = err && err.code === 'declined' ? 'Отменено' : 'Недоступно здесь'; } setTimeout(() => b.textContent = 'Скачать CSV', 2000); return; }
+});
+
+// ---------- «Спроси Claude»
+const QUICK = ['Что изменилось в закупках после курса?', 'Кто вытесняет Arthrex и через кого?', 'Что предложить этой клинике и курсанту?', 'Какие свежие торги важны и почему?', 'Напиши короткое письмо курсанту после курса'];
+let ASK = null;
+function askBlock(t) {
+  if (SITE_MODE) return '';
+  return `<div class="sec ask" id="ask"><h3>Спросить Claude об этом курсанте</h3>
+    <div class="chips">${QUICK.map(q => `<button type="button" class="chip neutral" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>
+    <div class="askrow"><textarea id="askq" rows="2" placeholder="Вопрос по курсанту, клинике или закупкам. Claude видит карточку, историю по годам и закупки под текущими фильтрами проводника."></textarea>
+      <div class="askbtns"><button type="button" class="btn" id="askgo">Спросить</button><button type="button" class="btn ghost" id="askstop" hidden>Стоп</button><button type="button" class="btn ghost" id="askclear" hidden>Новый разговор</button></div></div>
+    <div id="askout" class="askout" hidden></div><div class="note" id="asknote">Ответ считается на вашем аккаунте Claude; при первом вопросе браузер спросит разрешение.</div></div>`;
+}
+function askContext(t) {
+  const d = t.data, w = k => d ? Object.fromEntries(['total', 'arx', 'share', 'kn', 'kn_arx', 'sh', 'sh_arx', 'cons', 'eq', 'ins', 'anchors', 'anchors_arx', 'kl', 'kd', 'ti', 'brands', 'suppliers', 'months', 'status', 'src'].filter(x => x in d[k]).map(x => [x, d[k][x]])) : null;
+  const rows = (EX && EX.rows ? EX.rows : (d ? d.purch.filter(r => r.stitch) : [])).slice(0, 60).map(r => ({дата: r.d, источник: SRC_LABEL[r.src], стадия: r.st, номер: r.num, поставщик: r.sup, бренды: r.brs, сумма_млн: r.sum, arthrex_млн: r.arx, сегменты: r.segs.map(([k, v]) => [D.seg_label[k], v]), позиции: r.items, новое: r.new ? 'да, с ' + r.since : undefined, якоря: r.src === 'md' ? {безузловые: r.kl, узловые: r.kd, титан: r.ti} : undefined, название: r.title}));
+  return JSON.stringify({
+    курсант: {фио: t.fio, клиника: t.hospital, заказчик: t.customer, инн: t.inn, город: t.city, регион: t.region, дистрибьютор_территория: t.distr, сегмент_клиники: t.segm, источник_данных: D.group_label[t.group], сопоставление: t.match, примечание: t.note,
+      курс_карточки: t.course, дата_курса: t.date, тип: t.type, все_курсы: t.parts.map(p => p.course), коллеги_из_клиники: t.colleagues, анкета: t.survey},
+    методика: D.method,
+    флаги: d ? d.flags.map(f => D.flag_meta[f][0] + ': ' + D.flag_meta[f][1]) : [],
+    окно_12_мес_до_курса: w('before'), окно_12_мес_после_курса: w('after'),
+    история_по_годам_млн: d ? d.years.map(y => ({год: y.y, закупок: y.n, всего: y.total, arthrex: y.arx, плечо: y.sh, плечо_arx: y.sh_arx, колено: y.kn, колено_arx: y.kn_arx, оборудование: y.eq, расходка: y.cons, якоря_шт: y.anchors, якоря_arx_шт: y.anchors_arx, безузловые_шт: y.kl, бренды: y.brands, поставщики: y.suppliers, источник: y.src})) : [],
+    фильтры_проводника: EX ? {источник: EX.src, год: EX.year, сегмент: EX.seg && D.seg_label[EX.seg], бренд: EX.brand, поставщик: EX.sup, стадия: EX.stage, только_arthrex: EX.arx, поиск: EX.q, строк_всего: EX.rows ? EX.rows.length : 0} : null,
+    закупки_первые_60: rows,
+    даты_данных: D.asof,
+  });
+}
+const RULES = 'Ты аналитик Arthrex MedEd (Россия). Отвечай по-русски, кратко и по делу, без вступлений. Суммы в млн ₽, проценты округляй. Опирайся только на данные в JSON ниже; если данных нет или их мало, скажи прямо. Бренды до 2024 и после даты МД Про оценены по поставщику, тип якорей известен только по МД Про. Закупки присвоены всей клинике, а не лично врачу. Формат: обычный текст с короткими абзацами или списком, без markdown-таблиц.';
+function askInit(t) {
+  ASK = {t, turns: [], ctl: null};
+  const q = $('#askq'), out = $('#askout'), note = $('#asknote'), go = $('#askgo'), stop = $('#askstop'), clr = $('#askclear');
+  $('#ask .chips').addEventListener('click', e => { const b = e.target.closest('[data-q]'); if (b) { q.value = b.dataset.q; ask(); } });
+  go.onclick = ask; stop.onclick = () => ASK.ctl && ASK.ctl.abort(); clr.onclick = () => { ASK.turns = []; out.hidden = true; out.textContent = ''; clr.hidden = true; note.textContent = ''; };
+  q.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) ask(); });
+  async function ask() {
+    const question = q.value.trim(); if (!question) return;
+    if (SAMPLE === undefined) { note.textContent = 'Claude ещё подключается, попробуйте через секунду.'; return; }
+    if (!SAMPLE) { note.textContent = 'Спросить Claude можно только при просмотре на claude.ai или в приложении Claude.'; return; }
+    ASK.ctl = new AbortController();
+    ASK.turns.push({role: 'user', content: question});
+    const input = [{role: 'user', content: RULES + '\n\nДАННЫЕ КАРТОЧКИ (JSON):\n' + askContext(t)}, ...ASK.turns.slice(-8)];
+    out.hidden = false; out.textContent = 'Думаю…'; go.disabled = true; stop.hidden = false; note.textContent = ''; q.value = '';
+    const prevAnswers = ASK.turns.filter(x => x.role === 'assistant').map(x => x.content);
+    try {
+      const {text, truncated} = await SAMPLE(input, {cache: false, signal: ASK.ctl.signal, onText: ({text}) => { out.textContent = text; }});
+      ASK.turns.push({role: 'assistant', content: text});
+      if (truncated) note.textContent = 'Ответ обрезан по длине, спросите о меньшем.';
+    } catch (e) {
+      const code = e && e.code;
+      if (code === 'cancelled') { note.textContent = 'Остановлено.'; if (e.text) ASK.turns.push({role: 'assistant', content: e.text}); else ASK.turns.pop(); }
+      else { ASK.turns.pop(); out.textContent = e && e.text ? e.text : ''; if (!out.textContent) out.hidden = true;
+        note.textContent = {not_granted: 'Доступ к Claude для этой страницы не разрешён.', sampling_disabled: 'Claude недоступен для этого аккаунта.', rate_limited: 'Слишком много запросов или исчерпан лимит, попробуйте позже.', session_expired: 'Нужно заново войти в claude.ai.', prompt_too_large: 'Слишком много данных, сузьте фильтры проводника.', refused: 'Claude отказался отвечать на этот вопрос.'}[code] || 'Не получилось получить ответ, попробуйте ещё раз.'; }
+    } finally { go.disabled = false; stop.hidden = true; clr.hidden = ASK.turns.length === 0; }
+  }
+}
+
+function openCard(id) {
+  const t = T[id], d = t.data;
+  const parts = `<ul class="list">${t.parts.map(p => `<li class="${p.own?'own':''}"><div class="h"><b>${esc(p.course)}</b><span class="num">${dLabel(p.date)}</span></div>${p.own ? '<div class="s">курс этой карточки, окна «до/после» считаются от него</div>' : `<div class="s"><a href="#" data-open="${T.findIndex(x => x.person === t.person && x.course === p.course)}">открыть карточку этого курса</a></div>`}${p.hospital !== t.hospital ? `<div class="s">место работы на курсе: ${esc(p.hospital)}</div>` : ''}</li>`).join('')}</ul>`;
+  const who = `<div class="kv"><div>Клиника</div><div>${esc(t.hospital)}${t.customer && t.customer !== t.hospital ? `<div class="note">${esc(t.customer)}</div>` : ''}</div>
+    ${t.inn ? `<div>ИНН</div><div class="num">${t.inn}</div>` : ''}${t.region ? `<div>Регион</div><div>${esc(t.region)}${t.distr ? ' · ' + esc(t.distr) : ''}</div>` : t.city ? `<div>Город</div><div>${esc(t.city)}</div>` : ''}
+    ${t.segm ? `<div>Сегмент клиники</div><div>${esc(t.segm)}</div>` : ''}<div>Источник</div><div>${esc(D.group_label[t.group])}${t.match ? ` · сопоставление: ${esc(t.match)}` : ''}${t.note ? `<div class="note">${esc(t.note)}</div>` : ''}</div>
+    ${t.colleagues.length ? `<div>Коллеги на курсах</div><div>${t.colleagues.map(esc).join(', ')}<div class="note">цифры клиники у них общие</div></div>` : ''}</div>`;
+  const survey = t.survey ? `<div class="sec"><h3>Анкета курса «Плечо» 9–10 октября 2026</h3><div class="kv">
+    ${t.survey.pos ? `<div>Должность</div><div>${esc(t.survey.pos)}</div>` : ''}${t.survey.place ? `<div>Место работы</div><div>${esc(t.survey.place)}</div>` : ''}
+    <div>Стаж</div><div>хирург ${t.survey.surg_y ?? '—'} лет · артроскопия ${t.survey.arthro_y ?? '—'} лет</div>
+    <div>Операций в год</div><div>${t.survey.ops ?? '—'} всего · артроскопий плеча ${t.survey.sh_arthro ?? '—'} · эндопротезов плеча ${t.survey.sh_endo ?? '—'}</div>
+    ${t.survey.learn ? `<div>Хочет освоить</div><div>${esc(t.survey.learn)}</div>` : ''}${t.survey.track ? `<div>Как отслеживать</div><div>${esc(t.survey.track)}</div>` : ''}</div></div>` : '';
+  let body = `<div class="top"><div class="t"><div class="eyebrow">${d ? d.src : D.group_label[t.group]}</div><h2 class="name">${esc(t.fio)}</h2><div class="hosp">${esc(t.hospital)}${t.city ? ', ' + esc(t.city) : ''}</div>
+    <div class="meta">${d && d.new_n ? `<span class="chip new">${d.new_n} новых · ${fmt(d.new_sum)} млн${d.new_arx ? ` · Arthrex ${fmt(d.new_arx)}` : ''}</span>` : ''}${courseChips(t)}${d ? flagChips(t) : ''}</div></div><button class="x" type="button" id="close" aria-label="Закрыть">×</button></div>
+    ${askBlock(t)}<div class="two"><div class="sec"><h3>Курсант</h3>${who}</div><div class="sec"><h3>Участие в курсах</h3>${parts}</div></div>${survey}`;
+  if (d && d.whole.total > 0) {
+    const b = d.before, a = d.after;
+    body += `<div class="sec"><h3>Закупки клиники по месяцам, тыс. ₽</h3><div class="chartbox">${monthly(t)}</div></div>
+      <div class="two"><div class="sec"><h3>12 месяцев до и после курса ${dLabel(t.date)}, млн ₽</h3>${winTable(b, a)}</div>
+      <div class="sec"><h3>Бренды до и после</h3>${brandBars(b, a)}
+        ${a.suppliers.length ? `<h3 style="margin-top:8px">Поставщики после курса</h3><div class="kv">${a.suppliers.map(([s, v]) => `<div class="num">${fmt(v)}</div><div>${esc(s)}</div>`).join('')}</div>` : ''}
+</div></div>${history(t)}`;
+    if (d.fresh.length) body += `<div class="sec"><h3>Свежие торги (после выгрузки МД Про, новое первым)</h3><ul class="list">${d.fresh.map(purchLi).join('')}</ul></div>`;
+  } else if (d) {
+    body += `<div class="sec"><h3>Закупки</h3><div class="note">ИНН известен, но артроскопических закупок клиники в МД Про и Тендерплане нет.</div></div>`;
+  } else {
+    body += `<div class="sec"><h3>Закупки</h3><div class="note">${esc(t.note || D.group_label[t.group])}. Нужны отгрузки дистрибьютора или опрос врача.</div></div>`;
+  }
+  $('#dlg-body').innerHTML = body;
+  EX = null; if (d && d.whole.total > 0) { exInit(t); renderExFilters(); renderExBody(); }
+  if (!SITE_MODE) askInit(t);
+  $('#close').onclick = () => $('#dlg').close();
+  $('#dlg-body').querySelectorAll('[data-open]').forEach(a => a.onclick = e => { e.preventDefault(); openCard(+a.dataset.open); });
+  const svg = $('#dlg-body svg.monthly'), tip = $('#tip');
+  if (svg) {
+    svg.addEventListener('mousemove', e => {
+      const g = e.target.closest('.mb'); if (!g) { tip.style.display = 'none'; return; }
+      const i = +g.dataset.i, s = d.series, box = svg.parentElement.getBoundingClientRect();
+      tip.innerHTML = `${mLabel(D.months[i])}: всего <b>${fmt(s.t[i]/1000, 2)}</b> млн · Arthrex <b>${fmt(s.a[i]/1000, 2)}</b> · плечо ${fmt(s.sh[i]/1000, 2)} · колено ${fmt(s.kn[i]/1000, 2)}`;
+      tip.style.display = 'block'; tip.style.left = (e.clientX - box.left) + 'px'; tip.style.top = (e.clientY - box.top - 8) + 'px';
+    });
+    svg.addEventListener('mouseleave', () => tip.style.display = 'none');
+  }
+  const dlg = $('#dlg'); if (!dlg.open) dlg.showModal(); dlg.scrollTop = 0;
+  try { history.replaceState(null, '', '#t' + id); } catch (e) {}
+}
+$('#dlg').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+
+// вид «Кино» / рабочий
+const LOOK_KEY = 'eof-look';
+function applyLook(v) { if (v === 'cinema') document.documentElement.dataset.look = 'cinema'; else delete document.documentElement.dataset.look; $('#look').textContent = v === 'cinema' ? 'Вид: рабочий' : 'Вид: кино'; }
+let look = 'cinema'; try { look = localStorage.getItem(LOOK_KEY) || 'cinema'; } catch (e) {}
+applyLook(look);
+$('#look').onclick = () => { look = look === 'cinema' ? 'plain' : 'cinema'; try { localStorage.setItem(LOOK_KEY, look); } catch (e) {} applyLook(look); render(); };
+$('#grid').addEventListener('pointermove', e => { const c = e.target.closest('.card'); if (!c) return; const b = c.getBoundingClientRect(); c.style.setProperty('--mx', ((e.clientX - b.left) / b.width * 100).toFixed(1) + '%'); c.style.setProperty('--my', ((e.clientY - b.top) / b.height * 100).toFixed(1) + '%'); });
+render();
+const h = /^#t(\d+)$/.exec(location.hash); if (h && T[+h[1]]) openCard(+h[1]);
+
+}
+
+/* ---------- вход по паролю: расшифровка data.enc в браузере */
+const G = s => document.querySelector(s);
+const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function decrypt(password, blob) {
+  const enc = new TextEncoder();
+  const base = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+  const key = await crypto.subtle.deriveKey({name: 'PBKDF2', salt: b64(blob.salt), iterations: blob.iter, hash: 'SHA-256'}, base, {name: 'AES-GCM', length: 256}, false, ['decrypt']);
+  const pt = await crypto.subtle.decrypt({name: 'AES-GCM', iv: b64(blob.iv)}, key, b64(blob.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+async function tryLogin(pw, silent) {
+  const err = G('#pwErr'), btn = G('#pwBtn');
+  btn.disabled = true; if (!silent) btn.textContent = 'Проверяю…'; err.textContent = ''; G('#pw').removeAttribute('aria-invalid');
+  try {
+    const r = await fetch('data.enc?' + Date.now(), {cache: 'no-store'});
+    if (!r.ok) throw new Error('Файл данных недоступен (' + r.status + '). Откройте сайт через сервер, а не как файл.');
+    const data = await decrypt(pw, await r.json());
+    try { sessionStorage.setItem('meded_pw', pw); } catch (e) {}
+    G('#gate').hidden = true; G('#app').hidden = false;
+    boot(data);
+  } catch (e) {
+    if (e.name === 'OperationError') { err.textContent = 'Неверный пароль. Проверьте раскладку и попробуйте ещё раз.'; G('#pw').setAttribute('aria-invalid', 'true'); G('#pw').select(); }
+    else err.textContent = e.message || 'Ошибка';
+    try { sessionStorage.removeItem('meded_pw'); } catch (x) {}
+  } finally { btn.disabled = false; btn.textContent = 'Войти'; }
+}
+G('#gateForm').addEventListener('submit', e => { e.preventDefault(); tryLogin(G('#pw').value, false); });
+G('#eye').addEventListener('click', () => { const i = G('#pw'), b = G('#eye'), show = i.type === 'password'; i.type = show ? 'text' : 'password'; b.setAttribute('aria-pressed', show); b.setAttribute('aria-label', show ? 'Скрыть пароль' : 'Показать пароль'); i.focus(); });
+G('#logout').addEventListener('click', () => { try { sessionStorage.removeItem('meded_pw'); } catch (e) {} location.reload(); });
+let savedPw = null; try { savedPw = sessionStorage.getItem('meded_pw'); } catch (e) {}
+if (savedPw) tryLogin(savedPw, true);
+</script></body></html>
