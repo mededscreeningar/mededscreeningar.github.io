@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Oswald:wght@400;500;600&display=swap">
 <style>
-/* Layout: картотека. Сводка и фильтры сверху, сетка карточек курсантов, подробная карточка в диалоге, внизу курсы. */
+/* Layout: главная — карточки курсов; внутри курса — карточки курсантов; подробная карточка и закупки клиники в диалоге. */
 :root{
   --bg:#EEF1F5; --panel:#FFFFFF; --soft:#F4F6F9; --line:#D9DEE5; --ink:#161C24; --muted:#5F6B78; --dim:#98A3AF;
   --arx:#2a78d6; --arx-soft:#E3EEFB; --other:#B4BCC6; --other-soft:#E6EAEF;
@@ -43,8 +43,37 @@ button:focus-visible,input:focus-visible,select:focus-visible,.card:focus-visibl
 .head .l{flex:1 1 420px;min-width:0}
 .head .r{font-size:12px;color:var(--muted);text-align:right;flex:0 1 auto}
 .head .r b{display:block;color:var(--ink);font-weight:500}
-.notice{background:var(--warn-soft);border:1px solid var(--warn);border-radius:var(--r);padding:10px 14px;font-size:13px;margin-bottom:16px}
-.notice b{color:var(--warn)}
+.brandmark{display:inline-flex;flex-direction:column;gap:2px;text-decoration:none;color:inherit}
+.mark{font-weight:800;font-size:26px;letter-spacing:-.03em;line-height:1;color:var(--ink)}
+.mark b{color:var(--arx);font-weight:800}
+.hrow{display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;margin:6px 0 12px}
+.hrow .h2{font-size:20px;font-weight:700;flex:1 1 auto}
+.back{background:none;border:0;color:var(--arx);cursor:pointer;font-size:14px;padding:0;margin-bottom:12px;font-family:inherit}
+.chead{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;margin-bottom:14px;display:flex;flex-direction:column;gap:12px}
+.chead .ctop{display:flex;gap:8px 14px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.chead h2{font-size:26px;font-weight:700}
+.chead .prog{white-space:pre-wrap;font-size:13.5px}
+.chead .teach{display:flex;flex-direction:column;gap:3px;font-size:13.5px}
+.chead .pend{color:var(--muted);font-size:12.5px;border:1px dashed var(--line);border-radius:8px;padding:8px 10px}
+.outc{display:flex;flex-direction:column;gap:6px}
+.outc .trk{display:flex;height:16px;border-radius:4px;overflow:hidden;background:var(--soft);gap:2px}
+.outc .trk i{display:block;height:100%}
+.outc .lg{display:flex;gap:4px 12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.outc .lg i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.card .ctype{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:12px;color:var(--muted)}
+.card .ctype .num{color:var(--ink)}
+.card .cteach{font-size:12.5px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card .cprog{font-size:12.5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:var(--ink)}
+.card .cbar{display:flex;height:10px;border-radius:3px;overflow:hidden;background:var(--soft);gap:1px}
+.card .cbar i{display:block;height:100%}
+.auct{display:inline-flex;align-items:center;gap:5px;color:var(--arx);font-weight:600;cursor:pointer;border-bottom:1px dashed var(--arx);padding-bottom:1px}
+.auct:hover{border-bottom-style:solid}
+.msgs{display:flex;flex-direction:column;gap:8px}
+.msg{border-radius:10px;padding:9px 12px;font-size:13.5px;line-height:1.5;white-space:pre-wrap;max-width:100%;min-width:0;overflow-wrap:anywhere}
+.msg.user{background:var(--arx-soft);color:var(--ink);align-self:flex-end;max-width:85%}
+.msg.ai{background:var(--panel);border:1px solid var(--line)}
+.msg.ai.wait{color:var(--muted)}
+.dlg .lnk{color:var(--arx);cursor:pointer;background:none;border:0;padding:0;font:inherit;text-decoration:underline dashed}
 details.method{margin:0 0 16px;font-size:13px;color:var(--muted)}
 details.method summary{cursor:pointer;color:var(--ink);font-weight:500;list-style:none;display:inline-flex;gap:6px;align-items:center}
 details.method summary::before{content:"▸";font-size:11px}
@@ -52,6 +81,7 @@ details.method[open] summary::before{content:"▾"}
 details.method ul{margin:6px 0 0;padding-left:18px}
 /* сводка */
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.kpis:empty{display:none}
 .kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;min-width:0}
 .kpi .l{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:500}
 .kpi .v{font-family:var(--f-num);font-size:24px;font-weight:600;margin-top:4px;line-height:1.1;overflow-wrap:anywhere}
@@ -138,7 +168,7 @@ details.method ul{margin:6px 0 0;padding-left:18px}
 .askrow{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap}
 .askrow textarea{flex:1 1 320px;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-family:inherit;font-size:13.5px;color:var(--ink);resize:vertical}
 .askbtns{display:flex;gap:6px;flex-wrap:wrap}
-.askout{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;white-space:pre-wrap;font-size:13.5px;line-height:1.5;max-height:420px;overflow:auto}
+.askout{max-height:480px;overflow:auto;padding:2px}
 
 .card .foot{font-size:11px;color:var(--dim);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .card .reason{font-size:12.5px;color:var(--muted);border-top:1px dashed var(--line);padding-top:8px}
@@ -186,11 +216,8 @@ svg.monthly{width:100%;height:220px;display:block}
 .kv div:nth-child(odd){color:var(--muted)}
 .note{font-size:12.5px;color:var(--muted)}
 details.years summary{cursor:pointer;font-size:13px;color:var(--arx)}
-/* курсы */
-section.courses{margin-top:34px}
-section.courses .tscroll{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:4px 10px}
-tr.crow{cursor:pointer}
-tr.crow:hover td{background:var(--soft)}
+details.method{margin-top:30px;font-size:12.5px;color:var(--muted)}
+details.method summary{cursor:pointer}
 @media (prefers-reduced-motion:no-preference){.card{transition:border-color .15s,transform .15s}.card:not(.nodata):hover{transform:translateY(-1px)}}
 /* ---------- вид «Кино»: тёмный зал, постеры, плёнка, прожектор. Включается кнопкой, хранится в localStorage. */
 :root[data-look="cinema"]{
@@ -206,9 +233,14 @@ tr.crow:hover td{background:var(--soft)}
 :root[data-look="cinema"] .head{padding-top:6px;border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:22px;position:relative}
 :root[data-look="cinema"] .head::before{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:linear-gradient(90deg,var(--gold),transparent 60%)}
 :root[data-look="cinema"] .eyebrow{color:var(--gold);letter-spacing:.22em;font-size:11px}
-:root[data-look="cinema"] h1{font-family:var(--f-display);font-weight:600;font-size:46px;text-transform:uppercase;letter-spacing:.04em;line-height:1}
-:root[data-look="cinema"] .notice{background:var(--gold-soft);border-color:var(--gold)}
-:root[data-look="cinema"] .notice b{color:var(--gold)}
+:root[data-look="cinema"] .mark b{color:var(--gold)}
+:root[data-look="cinema"] .hrow .h2,:root[data-look="cinema"] .chead h2{font-family:var(--f-display);font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+:root[data-look="cinema"] .chead h2{font-size:34px}
+:root[data-look="cinema"] .chead{background:linear-gradient(170deg,#141A27,#0E131D);border-radius:6px;border-color:#2A3348}
+:root[data-look="cinema"] .back{color:var(--gold)}
+:root[data-look="cinema"] .auct{color:var(--gold);border-bottom-color:var(--gold)}
+:root[data-look="cinema"] .msg.user{background:var(--gold-soft)}
+:root[data-look="cinema"] .msg.ai{background:#0E131D;border-color:#2A3348}
 :root[data-look="cinema"] .kpi{background:linear-gradient(170deg,#141A27,#0E131D);border-color:var(--line);border-radius:6px;position:relative;overflow:hidden}
 :root[data-look="cinema"] .kpi::after{content:"";position:absolute;left:14px;right:14px;top:0;height:1px;background:linear-gradient(90deg,var(--gold),transparent)}
 :root[data-look="cinema"] .kpi .v{font-family:var(--f-display);font-size:30px;font-weight:500;letter-spacing:.01em;white-space:normal;overflow-wrap:anywhere}
@@ -243,7 +275,6 @@ tr.crow:hover td{background:var(--soft)}
 :root[data-look="cinema"] .ask{background:linear-gradient(170deg,#161D2C,#10151F);border:1px solid #2A3348}
 :root[data-look="cinema"] .btn{background:var(--gold);color:#120D04}
 :root[data-look="cinema"] .btn.ghost{background:transparent;color:var(--ink);border-color:#334059}
-:root[data-look="cinema"] section.courses .tscroll{border-radius:6px}
 :root[data-look="cinema"] .lookbtn{border-color:var(--gold);color:var(--gold)}
 .lookbtn{margin-top:8px;background:transparent;border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:12px;cursor:pointer;color:var(--muted)}
 .lookbtn:hover{color:var(--ink);border-color:var(--ink)}
@@ -297,46 +328,41 @@ tr.crow:hover td{background:var(--soft)}
 
 <div class="wrap">
   <header class="head">
-    <div class="l">
-      <div class="brandmark"><span class="mark" aria-label="MedEdScreeningAR">MedEdScreening<b>AR</b></span><span class="eyebrow">Arthrex MedEd · скрининг курсантов ЕОФ</span></div>
-      <h1>Курсанты ЕОФ</h1>
-      <div class="sub" id="subtitle"></div>
-    </div>
+    <div class="l"><a class="brandmark" href="#" id="home-link" aria-label="MedEdScreeningAR, на главную"><span class="mark">MedEdScreening<b>AR</b></span></a></div>
     <div class="r"><div id="asof"></div><button type="button" class="lookbtn" id="look">Вид: кино</button> <button type="button" class="lookbtn" id="logout">Выйти</button></div>
   </header>
 
-  <div class="notice"><b>Первая версия.</b> Карточка — курсант на конкретном курсе; кто был на двух курсах, получает две карточки. Закупки присвоены всей клинике курсанта: если из клиники несколько курсантов, цифры у них одинаковые. Точный разбор по врачу — следующий шаг.</div>
+  <section id="home">
+    <div class="kpis" id="kpis-home"></div>
+    <div class="hrow"><h2 class="h2">Курсы</h2><span class="note" id="home-note"></span><button type="button" class="btn ghost" id="all-btn">Все курсанты</button></div>
+    <div class="grid" id="cgrid"></div>
+  </section>
+
+  <section id="courseview" hidden>
+    <button type="button" class="back" id="back">← Все курсы</button>
+    <div class="chead" id="chead"></div>
+    <div class="kpis" id="kpis"></div>
+    <div class="filters">
+      <input id="q" type="search" placeholder="Фамилия, клиника, город, ИНН" autocomplete="off">
+      <select id="f-type"><option value="">Колено и плечо</option><option value="Колено">Колено</option><option value="Плечо">Плечо</option></select>
+      <select id="f-group"></select>
+      <select id="f-sort">
+        <option value="new">Сначала новое</option>
+        <option value="arx_after">Arthrex после курса ↓</option>
+        <option value="delta">Прирост Arthrex ↓</option>
+        <option value="total_after">Все закупки после ↓</option>
+        <option value="date">Дата курса ↓</option>
+        <option value="fio">По фамилии</option>
+      </select>
+      <span class="count" id="count"></span>
+      <button class="reset" id="reset" type="button">Сбросить</button>
+    </div>
+    <div class="flagbar" id="flagbar"></div>
+    <p class="legend"><span><i style="background:var(--other)"></i>все артроскопические закупки клиники</span><span><i style="background:var(--arx)"></i>Arthrex</span><span>▏ курс карточки</span><span>┊ другие курсы курсанта</span><span>в карточке: млн ₽ за 12 месяцев до → после курса</span></p>
+    <div class="grid" id="grid"></div>
+  </section>
 
   <details class="method"><summary>Как считаем</summary><ul id="method"></ul></details>
-
-  <div class="kpis" id="kpis"></div>
-
-  <div class="filters">
-    <input id="q" type="search" placeholder="Фамилия, клиника, город, ИНН" autocomplete="off">
-    <select id="f-course"></select>
-    <select id="f-type"><option value="">Колено и плечо</option><option value="Колено">Колено</option><option value="Плечо">Плечо</option></select>
-    <select id="f-group"></select>
-    <select id="f-sort">
-      <option value="new">Сначала новое</option>
-      <option value="arx_after">Arthrex после курса ↓</option>
-      <option value="delta">Прирост Arthrex ↓</option>
-      <option value="total_after">Все закупки после ↓</option>
-      <option value="date">Дата курса ↓</option>
-      <option value="fio">По фамилии</option>
-    </select>
-    <span class="count" id="count"></span>
-    <button class="reset" id="reset" type="button">Сбросить</button>
-  </div>
-  <div class="flagbar" id="flagbar"></div>
-
-  <p class="legend"><span><i style="background:var(--other)"></i>все артроскопические закупки клиники</span><span><i style="background:var(--arx)"></i>Arthrex</span><span>▏ курс карточки</span><span>┊ другие курсы курсанта</span><span>в карточке: млн ₽ за 12 месяцев до → после первого курса</span></p>
-  <div class="grid" id="grid"></div>
-
-  <section class="courses">
-    <h2>Курсы</h2>
-    <p class="sub" style="margin:0 0 10px">Суммы по уникальным клиникам курсантов, окно «после» считается от этого курса. Клик по строке — отфильтровать карточки.</p>
-    <div class="tscroll"><table id="courses"></table></div>
-  </section>
 </div>
 
 <dialog id="dlg"><div class="dlg" id="dlg-body"></div></dialog>
@@ -356,20 +382,19 @@ const dLabel = d => { const [y, m, dd] = d.split('-'); return `${+dd} ${['янв
 const ini = fio => fio.split(/\s+/).slice(0,2).map(w => w[0] || '').join('').toUpperCase();
 const mIdx = d => D.months.indexOf(d.slice(0,7));
 const MD_IDX = mIdx(D.asof.mdpro);
-const state = {q:'', course:'', type:'', group:'', flag:'', sort:'arx_after'};
+const state = {view: 'home', q:'', course:'', type:'', group:'', flag:'', sort:'new'};
+const CI = Object.fromEntries(D.courses.map((c, i) => [c.course, i]));
 
 // ---------- заголовок
 $('#asof').innerHTML = `МД Про по <b class="num">${dLabel(D.asof.mdpro)}</b>Тендерплан по <b class="num">${dLabel(D.asof.tp)}</b>собрано ${dLabel(D.asof.built)}`;
 $('#method').innerHTML = D.method.map(m => `<li>${esc(m)}</li>`).join('');
-const persons = new Set(T.map(t => t.person)).size, withInn = new Set(T.filter(t => t.inn).map(t => t.person)).size, clinics = new Set(T.filter(t => t.inn).map(t => t.inn)).size;
-$('#subtitle').textContent = `${T.length} карточек: ${persons} курсантов на ${D.courses.length} курсах 2024–2026. У ${withInn} курсантов клиника видна в госзакупках (${clinics} клиник).` + (D.new ? ` Новое за ${D.new.days} дней: ${D.new.rows} закупок в ${D.new.clinics} клиниках${D.new.live ? `, ${D.new.live} идут сейчас` : ''}.` : '');
+$('#home-note').textContent = `${D.courses.length} курсов 2024–2026 · ${new Set(T.map(t => t.person)).size} курсантов · ${new Set(T.filter(t => t.inn).map(t => t.inn)).size} клиник в госзакупках`;
 
-// ---------- фильтры
-$('#f-course').innerHTML = '<option value="">Все курсы</option>' + [...D.courses].reverse().map(c => `<option value="${esc(c.course)}">${esc(c.course)}</option>`).join('');
+// ---------- фильтры (внутри курса)
 $('#f-group').innerHTML = '<option value="">Все клиники</option><option value="__data">Есть закупки в данных</option>' + Object.entries(D.group_label).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('');
-for (const [id, key] of [['#q','q'],['#f-course','course'],['#f-type','type'],['#f-group','group'],['#f-sort','sort']])
+for (const [id, key] of [['#q','q'],['#f-type','type'],['#f-group','group'],['#f-sort','sort']])
   $(id).addEventListener('input', e => { state[key] = e.target.value; render(); });
-$('#reset').onclick = () => { Object.assign(state, {q:'', course:'', type:'', group:'', flag:'', sort:'arx_after'}); $('#q').value=''; $('#f-course').value=''; $('#f-type').value=''; $('#f-group').value=''; $('#f-sort').value='arx_after'; render(); };
+$('#reset').onclick = () => { Object.assign(state, {q:'', type:'', group:'', flag:'', sort:'new'}); $('#q').value=''; $('#f-type').value=''; $('#f-group').value=''; $('#f-sort').value='new'; render(); };
 
 function filtered() {
   const q = state.q.trim().toLowerCase().replace(/ё/g,'е');
@@ -475,33 +500,84 @@ function card(t) {
     </div>
     ${ybars(t)}
     ${spark(t)}
-    <div class="foot"><span>${d.src}${d.shared_with ? ` · общие с ${d.shared_with} курсант${d.shared_with===1?'ом':'ами'}` : ''}</span><span>${d.fresh.length ? d.fresh.length + ' свежих торгов' : ''}</span></div>
+    <div class="foot"><span>${d.src}${d.shared_with ? ` · общие с ${d.shared_with} курсант${d.shared_with===1?'ом':'ами'}` : ''}</span><span class="auct" data-auct role="link" title="Закупки клиники и чат с Claude">Закупки: ${d.purch.length}${d.fresh.length ? ` · ${d.fresh.length} свежих` : ''} →</span></div>
   </button>`;
 }
 
-// ---------- курсы
-function coursesTable(list) {
-  const ids = new Set(list.map(t => t.id));
-  const rows = D.courses.map(c => {
-    const n = T.filter(t => ids.has(t.id) && t.course === c.course).length;
-    const d = c.arx_after - c.arx_before;
-    return `<tr class="crow ${state.course===c.course?'on':''}" data-course="${esc(c.course)}"><td>${esc(c.course)}</td><td class="n">${n}</td><td class="n">${c.with_inn}</td><td class="n">${c.clinics}<small style="color:var(--muted)"> / ${c.mdpro}</small></td>
-      <td class="n">${fmt(c.total_before)} → ${fmt(c.total_after)}</td><td class="n arx">${fmt(c.arx_before)} → ${fmt(c.arx_after)}</td><td class="n ${d>=0?'up':'down'}">${c.window==='полное' ? (d>=0?'+':'')+fmt(d) : '<span style="color:var(--muted);font-weight:400">'+c.window+'</span>'}</td></tr>`;
-  }).join('');
-  return `<thead><tr><th>Курс</th><th class="n">Карточек</th><th class="n">С ИНН</th><th class="n">Клиник / в МД Про</th><th class="n">Все закупки, млн</th><th class="n">Arthrex, млн</th><th class="n">Δ Arthrex</th></tr></thead><tbody>${rows}</tbody>`;
+// ---------- карточки курсов (главная)
+const FLAG_COL = {arx_new: 'var(--good)', arx_up: 'var(--b3)', arx_down: 'var(--bad)', no_arx: 'var(--warn)', wait: 'var(--neu)', no_sales: 'var(--dim)', rest: 'var(--unk)'};
+const FLAG_LAB = {arx_new: 'начали Arthrex', arx_up: 'нарастили', arx_down: 'снизили', no_arx: 'без Arthrex', wait: 'ждём окно', no_sales: 'закупок нет', rest: 'нет данных о клинике'};
+function outcomeBar(c, withLegend) {
+  const o = {...c.outcomes}; o.rest = Math.max(0, c.participants - Object.values(o).reduce((s, v) => s + v, 0));
+  const keys = Object.keys(o).filter(k => o[k] > 0), n = c.participants || 1;
+  const trk = `<div class="${withLegend ? 'trk' : 'cbar'}" title="${keys.map(k => FLAG_LAB[k] + ' ' + o[k]).join(', ')}">${keys.map(k => `<i style="width:${(o[k] / n * 100).toFixed(1)}%;background:${FLAG_COL[k]}"></i>`).join('')}</div>`;
+  return withLegend ? `<div class="outc">${trk}<div class="lg">${keys.map(k => `<span><i style="background:${FLAG_COL[k]}"></i>${FLAG_LAB[k]} <b class="num">${o[k]}</b></span>`).join('')}</div></div>` : trk;
 }
-
+function brandAfterBar(c, withLegend) {
+  if (!c.total_after) return '';
+  const col = n => BRAND_COLOR[n] || 'var(--other)';
+  const trk = `<div class="${withLegend ? 'trk' : 'cbar'}" title="после курса: ${esc(c.brands_after.map(([n, v]) => n + ' ' + fmt(v)).join(', '))}">${c.brands_after.map(([n, v]) => `<i style="width:${(v / c.total_after * 100).toFixed(1)}%;background:${col(n)}"></i>`).join('')}</div>`;
+  return withLegend ? `<div class="outc">${trk}<div class="lg">${c.brands_after.map(([n, v]) => `<span><i style="background:${col(n)}"></i>${esc(n)} <b class="num">${fmt(v)}</b></span>`).join('')}</div></div>` : trk;
+}
+function courseCard(c, i) {
+  const dl = c.arx_after - c.arx_before, teach = c.teachers && c.teachers.length ? c.teachers.join(', ') : 'преподаватели не внесены';
+  const win = c.window === 'полное' ? '' : ` <small>${c.window === 'нет' ? 'окно «после» ещё не началось' : 'окно «после» неполное'}</small>`;
+  return `<button type="button" class="card ${c.new_n ? 'hasnew' : ''}" data-c="${i}" style="--i:${i}">
+    <div class="ctype"><span class="chip course ${c.type === 'Колено' ? 'kn' : 'sh'} own">${c.type}</span><span class="num">${dLabel(c.date)}</span></div>
+    <div class="fio">${esc(c.course)}</div>
+    <div class="cteach">${esc(teach)}${c.place ? ' · ' + esc(c.place) : ''}</div>
+    ${c.program ? `<div class="cprog">${esc(c.program.split('\n')[0])}</div>` : ''}
+    <div class="chips">${c.new_n ? `<span class="chip new">${c.new_n} нов${c.new_n === 1 ? 'ая' : c.new_n < 5 ? 'ые' : 'ых'} закуп${c.new_n === 1 ? 'ка' : c.new_n < 5 ? 'ки' : 'ок'}${c.new_live ? ` · ${c.new_live} идут` : ''}</span>` : ''}</div>
+    <div class="mets">
+      <div class="met"><div class="l">Курсантов</div><div class="v">${c.participants} <small>${c.with_data} с закупками</small></div></div>
+      <div class="met arx"><div class="l">Arthrex до → после</div><div class="v">${fmt(c.arx_before)} → ${fmt(c.arx_after)}${win}</div></div>
+      <div class="met"><div class="l">Доля Arthrex</div><div class="v">${pct(c.share_before)} → ${pct(c.share_after)}</div></div>
+    </div>
+    <div class="yrow"><span class="cap">курсанты после курса</span>${outcomeBar(c, false)}</div>
+    ${c.total_after ? `<div class="yrow"><span class="cap">бренды после курса, ${fmt(c.total_after, 0)} млн</span>${brandAfterBar(c, false)}</div>` : ''}
+    <div class="foot"><span>${c.clinics} клиник · ${c.mdpro} в МД Про</span><span class="${dl >= 0 ? 'up' : 'down'}">${c.window === 'полное' ? (dl >= 0 ? '+' : '') + fmt(dl) + ' млн Arthrex' : ''}</span></div>
+  </button>`;
+}
+function courseHead(c) {
+  if (!c) return `<div class="ctop">все курсы 2024–2026</div><h2>Все курсанты</h2>`;
+  const teach = c.teachers && c.teachers.length ? `<div class="teach">${c.teachers.map(t => `<span>${esc(t)}</span>`).join('')}</div>` : `<div class="pend">Преподаватели не внесены. Пришлите список, и он появится здесь (файл data/courses_info.json).</div>`;
+  const prog = c.program ? `<div class="prog">${esc(c.program)}</div>` : `<div class="pend">Программа курса не внесена. Пришлите программу, и она появится здесь.</div>`;
+  return `<div class="ctop"><span class="chip course ${c.type === 'Колено' ? 'kn' : 'sh'} own">${c.type}</span><span class="num">${dLabel(c.date)}</span>${c.place ? `<span>${esc(c.place)}</span>` : ''}<span>${c.participants} курсантов · ${c.clinics} клиник в госзакупках · ${c.mdpro} в МД Про</span>${c.note ? `<span>${esc(c.note)}</span>` : ''}</div>
+    <h2>${esc(c.course)}</h2>
+    <div class="two"><div class="sec"><h3>Преподаватели</h3>${teach}</div><div class="sec"><h3>Программа</h3>${prog}</div></div>
+    <div class="two"><div class="sec"><h3>Курсанты после курса</h3>${outcomeBar(c, true)}</div><div class="sec"><h3>Бренды в клиниках за 12 месяцев после курса${c.total_after ? `, ${fmt(c.total_after, 0)} млн` : ''}</h3>${brandAfterBar(c, true) || '<div class="note">закупок после курса пока не видно</div>'}</div></div>`;
+}
+function renderHome() {
+  $('#kpis-home').innerHTML = kpis(T);
+  $('#cgrid').innerHTML = [...D.courses].reverse().map(c => courseCard(c, CI[c.course])).join('');
+}
 function render() {
+  if (state.view === 'home') { renderHome(); return; }
   const list = filtered().sort(SORT[state.sort]);
   $('#kpis').innerHTML = kpis(list);
   $('#flagbar').innerHTML = flagbar(filtered());
-  $('#count').textContent = `${list.length} из ${T.length}`;
+  $('#count').textContent = `${list.length} из ${state.course ? D.courses[CI[state.course]].participants : T.length}`;
   $('#grid').innerHTML = list.length ? list.map((t, i) => card(t).replace('<button type="button" class="card', `<button type="button" style="--i:${i}" class="card`)).join('') : '<div class="empty">Никого не найдено. Сбросьте фильтры.</div>';
-  $('#courses').innerHTML = coursesTable(list);
 }
+function showHome() {
+  state.view = 'home'; $('#home').hidden = false; $('#courseview').hidden = true; render();
+  try { history.replaceState(null, '', '#'); } catch (e) {}
+  window.scrollTo({top: 0});
+}
+function showCourse(name) {
+  state.view = 'course'; state.course = name || ''; state.flag = '';
+  $('#home').hidden = true; $('#courseview').hidden = false; $('#f-type').hidden = !!state.course;
+  $('#chead').innerHTML = courseHead(state.course ? D.courses[CI[state.course]] : null);
+  render();
+  try { history.replaceState(null, '', state.course ? '#c' + CI[state.course] : '#all'); } catch (e) {}
+  window.scrollTo({top: 0});
+}
+$('#cgrid').addEventListener('click', e => { const c = e.target.closest('[data-c]'); if (c) showCourse(D.courses[+c.dataset.c].course); });
+$('#all-btn').onclick = () => showCourse('');
+$('#back').onclick = showHome;
+$('#home-link').addEventListener('click', e => { e.preventDefault(); showHome(); });
 $('#flagbar').addEventListener('click', e => { const b = e.target.closest('[data-flag]'); if (!b) return; state.flag = state.flag === b.dataset.flag ? '' : b.dataset.flag; render(); });
-$('#grid').addEventListener('click', e => { const c = e.target.closest('.card'); if (c) openCard(+c.dataset.id); });
-$('#courses').addEventListener('click', e => { const r = e.target.closest('tr.crow'); if (!r) return; state.course = state.course === r.dataset.course ? '' : r.dataset.course; $('#f-course').value = state.course; render(); window.scrollTo({top: $('#grid').offsetTop - 80, behavior: 'smooth'}); });
+$('#grid').addEventListener('click', e => { const c = e.target.closest('.card'); if (!c) return; if (e.target.closest('[data-auct]')) openAuctions(+c.dataset.id); else openCard(+c.dataset.id); });
 
 // ---------- подробная карточка
 function winTable(b, a) {
@@ -567,23 +643,27 @@ function purchLi(r) {
     ${r.title ? `<div class="s">${esc(r.title)}</div>` : ''}<div class="s">${r.items.map(([p, v]) => esc(p) + ' ' + fmt(v)).join(' · ')}</div></li>`;
 }
 function exInit(t) { EX = {t, src: 'stitch', year: '', seg: '', brand: '', sup: '', stage: '', arx: false, onlynew: false, q: '', sort: 'date', limit: 50}; }
-function exRows() {
-  const rows = EX.t.data.purch.filter(r => {
-    if (EX.src === 'stitch' && !r.stitch) return false;
-    if ((EX.src === 'tp' || EX.src === 'md') && r.src !== EX.src) return false;
-    if (EX.year && !r.d.startsWith(EX.year)) return false;
-    if (EX.seg && !r.segs.some(([k]) => k === EX.seg)) return false;
-    if (EX.brand && !r.brs.some(([b]) => b === EX.brand)) return false;
-    if (EX.sup && r.sup !== EX.sup) return false;
-    if (EX.stage && r.st !== EX.stage) return false;
-    if (EX.arx && !(r.arx > 0)) return false;
-    if (EX.onlynew && !r.new) return false;
-    if (EX.q) { const q = EX.q.toLowerCase().replace(/ё/g, 'е'); if (!(r.title + ' ' + r.sup + ' ' + r.num + ' ' + r.items.map(i => i[0]).join(' ') + ' ' + r.brs.map(b => b[0]).join(' ')).toLowerCase().replace(/ё/g, 'е').includes(q)) return false; }
+const SEG_BY_LABEL = Object.fromEntries(Object.entries(D.seg_label).map(([k, v]) => [v.toLowerCase(), k]));
+const lc = v => String(v ?? '').toLowerCase().replace(/ё/g, 'е');
+function filterPurch(P, F) {
+  return P.filter(r => {
+    if (F.src === 'stitch' && !r.stitch) return false;
+    if ((F.src === 'tp' || F.src === 'md') && r.src !== F.src) return false;
+    if (F.year && !r.d.startsWith(String(F.year))) return false;
+    if (F.y0 && r.d.slice(0, 4) < String(F.y0)) return false;
+    if (F.y1 && r.d.slice(0, 4) > String(F.y1)) return false;
+    if (F.seg && !r.segs.some(([k]) => k === F.seg)) return false;
+    if (F.brand && !r.brs.some(([b]) => b === F.brand || lc(b).includes(lc(F.brand)))) return false;
+    if (F.sup && !(r.sup === F.sup || lc(r.sup).includes(lc(F.sup)))) return false;
+    if (F.stage && !(r.st === F.stage || lc(r.st).includes(lc(F.stage)))) return false;
+    if (F.arx && !(r.arx > 0)) return false;
+    if (F.onlynew && !r.new) return false;
+    if (F.q) { const q = lc(F.q); if (!lc(r.title + ' ' + r.sup + ' ' + r.num + ' ' + r.items.map(i => i[0]).join(' ') + ' ' + r.brs.map(b => b[0]).join(' ')).includes(q)) return false; }
     return true;
   });
-  rows.sort(EX.sort === 'sum' ? (a, b) => b.sum - a.sum : EX.sort === 'arx' ? (a, b) => b.arx - a.arx || b.sum - a.sum : (a, b) => b.d.localeCompare(a.d));
-  return rows;
 }
+const sortPurch = (rows, by) => rows.sort(by === 'sum' ? (a, b) => b.sum - a.sum : by === 'arx' ? (a, b) => b.arx - a.arx || b.sum - a.sum : (a, b) => b.d.localeCompare(a.d));
+function exRows() { return sortPurch(filterPurch(EX.t.data.purch, EX), EX.sort); }
 const opts = (list, all) => `<option value="">${all}</option>` + list.map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join('');
 function renderExFilters() {
   const P = EX.t.data.purch, hasMd = P.some(r => r.src === 'md');
@@ -630,20 +710,24 @@ $('#dlg-body').addEventListener('click', async e => {
   if (e.target.closest('[data-csv]')) { const b = e.target.closest('[data-csv]'); const fn = `закупки_${EX.t.inn}_${EX.t.fio.split(' ')[0]}.csv`, csv = '\ufeff' + exTable(EX.rows, ','); try { if (DL) await DL.save({filename: fn, data: csv}); else { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv;charset=utf-8'})); a.download = fn; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); } b.textContent = 'Сохранено'; } catch (err) { b.textContent = err && err.code === 'declined' ? 'Отменено' : 'Недоступно здесь'; } setTimeout(() => b.textContent = 'Скачать CSV', 2000); return; }
 });
 
-// ---------- «Спроси Claude»
+// ---------- «Спроси Claude»: на claude.ai через sample, на сайте через API-ключ (D.api_key из data.enc)
+const ASK_OK = !SITE_MODE || !!D.api_key;
 const QUICK = ['Что изменилось в закупках после курса?', 'Кто вытесняет Arthrex и через кого?', 'Что предложить этой клинике и курсанту?', 'Какие свежие торги важны и почему?', 'Напиши короткое письмо курсанту после курса'];
+const QUICK_AUCT = ['Сколько клиника тратит на артроскопию по годам и какая доля Arthrex?', 'Какие поставщики выигрывают и чьи бренды возят?', 'Что купили в этом году и что идёт сейчас?', 'Покажи закупки якорей за последние два года', 'Где Arthrex проиграл, кому и на какую сумму?'];
 let ASK = null;
-function askBlock(t) {
-  if (SITE_MODE) return '';
-  return `<div class="sec ask" id="ask"><h3>Спросить Claude об этом курсанте</h3>
-    <div class="chips">${QUICK.map(q => `<button type="button" class="chip neutral" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>
-    <div class="askrow"><textarea id="askq" rows="2" placeholder="Вопрос по курсанту, клинике или закупкам. Claude видит карточку, историю по годам и закупки под текущими фильтрами проводника."></textarea>
+function askBlock(t, mode) {
+  if (!ASK_OK) return '';
+  const qs = mode === 'auct' ? QUICK_AUCT : QUICK;
+  return `<div class="sec ask" id="ask"><h3>${mode === 'auct' ? 'Спросить Claude о закупках клиники' : 'Спросить Claude об этом курсанте'}</h3>
+    <div class="chips">${qs.map(q => `<button type="button" class="chip neutral" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>
+    <div id="askout" class="askout" hidden><div class="msgs" id="msgs"></div></div>
+    <div class="askrow"><textarea id="askq" rows="2" placeholder="${mode === 'auct' ? 'Что найти или посчитать в закупках клиники? Claude ищет по всем закупкам, считает суммы и может показать результат в таблице ниже.' : 'Вопрос по курсанту, клинике или закупкам. Claude видит карточку, историю по годам и может искать и считать по всем закупкам клиники.'}"></textarea>
       <div class="askbtns"><button type="button" class="btn" id="askgo">Спросить</button><button type="button" class="btn ghost" id="askstop" hidden>Стоп</button><button type="button" class="btn ghost" id="askclear" hidden>Новый разговор</button></div></div>
-    <div id="askout" class="askout" hidden></div><div class="note" id="asknote">Ответ считается на вашем аккаунте Claude; при первом вопросе браузер спросит разрешение.</div></div>`;
+    <div class="note" id="asknote">${SITE_MODE ? 'Ответ считает Claude через API на ключе компании.' : 'Ответ считается на вашем аккаунте Claude; при первом вопросе браузер спросит разрешение.'}</div></div>`;
 }
 function askContext(t) {
   const d = t.data, w = k => d ? Object.fromEntries(['total', 'arx', 'share', 'kn', 'kn_arx', 'sh', 'sh_arx', 'cons', 'eq', 'ins', 'anchors', 'anchors_arx', 'kl', 'kd', 'ti', 'brands', 'suppliers', 'months', 'status', 'src'].filter(x => x in d[k]).map(x => [x, d[k][x]])) : null;
-  const rows = (EX && EX.rows ? EX.rows : (d ? d.purch.filter(r => r.stitch) : [])).slice(0, 60).map(r => ({дата: r.d, источник: SRC_LABEL[r.src], стадия: r.st, номер: r.num, поставщик: r.sup, бренды: r.brs, сумма_млн: r.sum, arthrex_млн: r.arx, сегменты: r.segs.map(([k, v]) => [D.seg_label[k], v]), позиции: r.items, новое: r.new ? 'да, с ' + r.since : undefined, якоря: r.src === 'md' ? {безузловые: r.kl, узловые: r.kd, титан: r.ti} : undefined, название: r.title}));
+  const rows = (EX && EX.rows ? EX.rows : (d ? d.purch.filter(r => r.stitch) : [])).slice(0, 40).map(purchRow);
   return JSON.stringify({
     курсант: {фио: t.fio, клиника: t.hospital, заказчик: t.customer, инн: t.inn, город: t.city, регион: t.region, дистрибьютор_территория: t.distr, сегмент_клиники: t.segm, источник_данных: D.group_label[t.group], сопоставление: t.match, примечание: t.note,
       курс_карточки: t.course, дата_курса: t.date, тип: t.type, все_курсы: t.parts.map(p => p.course), коллеги_из_клиники: t.colleagues, анкета: t.survey},
@@ -651,38 +735,110 @@ function askContext(t) {
     флаги: d ? d.flags.map(f => D.flag_meta[f][0] + ': ' + D.flag_meta[f][1]) : [],
     окно_12_мес_до_курса: w('before'), окно_12_мес_после_курса: w('after'),
     история_по_годам_млн: d ? d.years.map(y => ({год: y.y, закупок: y.n, всего: y.total, arthrex: y.arx, плечо: y.sh, плечо_arx: y.sh_arx, колено: y.kn, колено_arx: y.kn_arx, оборудование: y.eq, расходка: y.cons, якоря_шт: y.anchors, якоря_arx_шт: y.anchors_arx, безузловые_шт: y.kl, бренды: y.brands, поставщики: y.suppliers, источник: y.src})) : [],
+    всего_закупок_в_базе: d ? d.purch.length : 0,
     фильтры_проводника: EX ? {источник: EX.src, год: EX.year, сегмент: EX.seg && D.seg_label[EX.seg], бренд: EX.brand, поставщик: EX.sup, стадия: EX.stage, только_arthrex: EX.arx, поиск: EX.q, строк_всего: EX.rows ? EX.rows.length : 0} : null,
-    закупки_первые_60: rows,
+    закупки_под_фильтрами_первые_40: rows,
     даты_данных: D.asof,
   });
 }
-const RULES = 'Ты аналитик Arthrex MedEd (Россия). Отвечай по-русски, кратко и по делу, без вступлений. Суммы в млн ₽, проценты округляй. Опирайся только на данные в JSON ниже; если данных нет или их мало, скажи прямо. Бренды до 2024 и после даты МД Про оценены по поставщику, тип якорей известен только по МД Про. Закупки присвоены всей клинике, а не лично врачу. Формат: обычный текст с короткими абзацами или списком, без markdown-таблиц.';
-function askInit(t) {
+const purchRow = r => ({дата: r.d, источник: SRC_LABEL[r.src], стадия: r.st, номер: r.num, поставщик: r.sup, бренды: r.brs, сумма_млн: r.sum, arthrex_млн: r.arx, сегменты: r.segs.map(([k, v]) => [D.seg_label[k], v]), позиции: r.items, новое: r.new ? 'да, с ' + r.since : undefined, якоря: r.src === 'md' ? {безузловые: r.kl, узловые: r.kd, титан: r.ti} : undefined, название: r.title});
+const RULES = 'Ты аналитик Arthrex MedEd (Россия). Отвечай по-русски, кратко и по делу, без вступлений. Суммы в млн ₽, проценты округляй. Опирайся только на данные в JSON ниже и на результаты инструментов; если данных нет или их мало, скажи прямо. Инструменты purchases и summary ищут и считают по ВСЕМ закупкам клиники (не только по первым 40 в JSON) — используй их для любых подсчётов, поиска позиций, поставщиков, брендов и периодов. Если пользователь просит показать или найти закупки, после подсчёта вызови show_in_explorer с теми же фильтрами, чтобы таблица появилась на экране. Бренды до 2024 и после даты МД Про оценены по поставщику, тип якорей известен только по МД Про. Закупки присвоены всей клинике, а не лично врачу. Формат: обычный текст с короткими абзацами или списком, без markdown-таблиц.';
+const FILTER_PROPS = {source: {type: 'string', enum: ['stitch', 'all', 'tp', 'md'], description: 'stitch (по умолчанию): МД Про + Тендерплан вне периода МД Про, без дублей; all: всё; tp: только Тендерплан; md: только МД Про'},
+  year: {type: 'integer', description: 'один год'}, year_from: {type: 'integer'}, year_to: {type: 'integer'},
+  segment: {type: 'string', description: 'сегмент: ' + Object.values(D.seg_label).join(', ')}, brand: {type: 'string', description: 'бренд, подстрока, например Arthrex или Smith'},
+  supplier: {type: 'string', description: 'поставщик, подстрока'}, stage: {type: 'string', description: 'стадия: контракт, итоги, идёт приём заявок'},
+  only_arthrex: {type: 'boolean'}, only_new: {type: 'boolean', description: 'только новое за последние дни'}, query: {type: 'string', description: 'поиск по названию, позициям, поставщику, номеру'}};
+const toF = f => ({src: f.source || 'stitch', year: f.year ? String(f.year) : '', y0: f.year_from || '', y1: f.year_to || '', seg: f.segment ? (SEG_BY_LABEL[lc(f.segment)] || Object.keys(D.seg_label).find(k => lc(D.seg_label[k]).includes(lc(f.segment))) || f.segment) : '', brand: f.brand || '', sup: f.supplier || '', stage: f.stage || '', arx: !!f.only_arthrex, onlynew: !!f.only_new, q: f.query || ''});
+const agg = rows => ({закупок: rows.length, сумма_млн: +rows.reduce((s, r) => s + r.sum, 0).toFixed(2), arthrex_млн: +rows.reduce((s, r) => s + r.arx, 0).toFixed(2)});
+function askTools(t) {
+  const P = t.data ? t.data.purch : [];
+  return [
+    {name: 'purchases', description: 'Найти закупки клиники по фильтрам: возвращает количество, суммы и список строк (до limit).', inputSchema: {type: 'object', properties: {...FILTER_PROPS, sort: {type: 'string', enum: ['date', 'sum', 'arx']}, limit: {type: 'integer', description: 'до 100, по умолчанию 30'}}},
+      execute: f => { const rows = sortPurch(filterPurch(P, toF(f)), f.sort || 'date'); return {...agg(rows), показано: Math.min(rows.length, Math.min(100, f.limit || 30)), строки: rows.slice(0, Math.min(100, f.limit || 30)).map(purchRow)}; }},
+    {name: 'summary', description: 'Сводка по закупкам клиники под фильтрами с разбивкой по year, month, brand, supplier, segment, stage или source: количество, сумма, Arthrex, доля.', inputSchema: {type: 'object', properties: {...FILTER_PROPS, by: {type: 'string', enum: ['year', 'month', 'brand', 'supplier', 'segment', 'stage', 'source']}}, required: ['by']},
+      execute: f => { const rows = filterPurch(P, toF(f)), m = {};
+        const keyOf = r => f.by === 'year' ? [[r.d.slice(0, 4), r.sum, r.arx]] : f.by === 'month' ? [[r.d.slice(0, 7), r.sum, r.arx]] : f.by === 'brand' ? r.brs.map(([b, v]) => [b, v, b === 'Arthrex' ? v : 0]) : f.by === 'supplier' ? [[r.sup || '—', r.sum, r.arx]] : f.by === 'segment' ? r.segs.map(([k, v]) => [D.seg_label[k], v, 0]) : f.by === 'stage' ? [[r.st, r.sum, r.arx]] : [[SRC_LABEL[r.src], r.sum, r.arx]];
+        for (const r of rows) for (const [k, v, a] of keyOf(r)) { const e = m[k] || (m[k] = {n: 0, s: 0, a: 0}); e.n++; e.s += v; e.a += a; }
+        const out = Object.entries(m).map(([k, e]) => ({ключ: k, закупок: e.n, сумма_млн: +e.s.toFixed(2), arthrex_млн: +e.a.toFixed(2), доля_arthrex: e.s ? Math.round(e.a / e.s * 100) + '%' : '—'}));
+        out.sort(['year', 'month'].includes(f.by) ? (x, y) => x.ключ.localeCompare(y.ключ) : (x, y) => y.сумма_млн - x.сумма_млн);
+        return {...agg(rows), разбивка: out.slice(0, 40), примечание: f.by === 'segment' ? 'сегменты: доля Arthrex не считается' : undefined}; }},
+    {name: 'show_in_explorer', description: 'Показать пользователю таблицу закупок под фильтрами в проводнике на экране. Вызывай после поиска, когда уместно показать список.', inputSchema: {type: 'object', properties: {...FILTER_PROPS, sort: {type: 'string', enum: ['date', 'sum', 'arx']}}},
+      execute: f => { if (!EX || EX.t !== t) return {ошибка: 'проводник закрыт'}; Object.assign(EX, toF(f), {sort: f.sort || 'date', limit: 50}); renderExFilters(); syncExFilters(); renderExBody(); const ex = $('#ex'); if (ex && ex.scrollIntoView) ex.scrollIntoView({behavior: 'smooth', block: 'start'}); return {показано_строк: EX.rows.length}; }},
+  ];
+}
+function syncExFilters() { for (const el of document.querySelectorAll('#ex [data-ex]')) { const k = el.dataset.ex; if (el.type === 'checkbox') el.checked = !!EX[k]; else el.value = EX[k] || ''; } }
+async function apiChat(system, turns, tools, {onText, onStatus, signal}) {
+  const defs = tools.map(t => ({name: t.name, description: t.description, input_schema: t.inputSchema}));
+  const msgs = turns.map(m => ({role: m.role, content: m.content}));
+  let useFallback = true;
+  for (let step = 0; step < 10; step++) {
+    const body = {model: 'claude-opus-5-5', max_tokens: 4096, system, messages: msgs, tools: defs, output_config: {effort: 'medium'}};
+    const headers = {'content-type': 'application/json', 'x-api-key': D.api_key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true'};
+    if (useFallback) { body.fallbacks = 'default'; headers['anthropic-beta'] = 'server-side-fallback-2026-07-01'; }
+    const r = await fetch('https://api.anthropic.com/v1/messages', {method: 'POST', signal, headers, body: JSON.stringify(body)});
+    if (!r.ok) {
+      let msg = ''; try { msg = (await r.json()).error.message || ''; } catch (e) {}
+      if (r.status === 400 && useFallback && /fallback|beta/i.test(msg)) { useFallback = false; step--; continue; }
+      throw {code: r.status === 401 ? 'auth' : r.status === 429 ? 'rate_limited' : r.status === 400 && /too (long|large)|context/i.test(msg) ? 'prompt_too_large' : 'http', message: msg || 'HTTP ' + r.status};
+    }
+    const res = await r.json();
+    const text = res.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    if (res.stop_reason === 'refusal') throw {code: 'refused', text};
+    if (res.stop_reason !== 'tool_use') return {text, truncated: res.stop_reason === 'max_tokens'};
+    msgs.push({role: 'assistant', content: res.content});
+    const results = [];
+    for (const b of res.content.filter(b => b.type === 'tool_use')) {
+      onStatus && onStatus(`Считаю: ${b.name}…`); let out;
+      try { out = JSON.stringify(await tools.find(t => t.name === b.name).execute(b.input)); } catch (e) { out = 'Ошибка: ' + (e && e.message || e); }
+      results.push({type: 'tool_result', tool_use_id: b.id, content: out.slice(0, 60000)});
+    }
+    msgs.push({role: 'user', content: results});
+    if (text) onText && onText({text: text + '\n\n'});
+  }
+  throw {code: 'loop', message: 'Слишком много шагов, уточните вопрос.'};
+}
+function askInit(t, mode) {
   ASK = {t, turns: [], ctl: null};
-  const q = $('#askq'), out = $('#askout'), note = $('#asknote'), go = $('#askgo'), stop = $('#askstop'), clr = $('#askclear');
+  const q = $('#askq'), out = $('#askout'), msgs = $('#msgs'), note = $('#asknote'), go = $('#askgo'), stop = $('#askstop'), clr = $('#askclear');
+  const bubble = (role, text, cls) => { const d = document.createElement('div'); d.className = 'msg ' + role + (cls ? ' ' + cls : ''); d.textContent = text; msgs.appendChild(d); out.scrollTop = out.scrollHeight; return d; };
   $('#ask .chips').addEventListener('click', e => { const b = e.target.closest('[data-q]'); if (b) { q.value = b.dataset.q; ask(); } });
-  go.onclick = ask; stop.onclick = () => ASK.ctl && ASK.ctl.abort(); clr.onclick = () => { ASK.turns = []; out.hidden = true; out.textContent = ''; clr.hidden = true; note.textContent = ''; };
+  go.onclick = ask; stop.onclick = () => ASK.ctl && ASK.ctl.abort(); clr.onclick = () => { ASK.turns = []; out.hidden = true; msgs.innerHTML = ''; clr.hidden = true; note.textContent = ''; };
   q.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) ask(); });
   async function ask() {
     const question = q.value.trim(); if (!question) return;
-    if (SAMPLE === undefined) { note.textContent = 'Claude ещё подключается, попробуйте через секунду.'; return; }
-    if (!SAMPLE) { note.textContent = 'Спросить Claude можно только при просмотре на claude.ai или в приложении Claude.'; return; }
+    if (!SITE_MODE && SAMPLE === undefined) { note.textContent = 'Claude ещё подключается, попробуйте через секунду.'; return; }
+    if (!SITE_MODE && !SAMPLE) { note.textContent = 'Спросить Claude можно только при просмотре на claude.ai или в приложении Claude.'; return; }
     ASK.ctl = new AbortController();
     ASK.turns.push({role: 'user', content: question});
-    const input = [{role: 'user', content: RULES + '\n\nДАННЫЕ КАРТОЧКИ (JSON):\n' + askContext(t)}, ...ASK.turns.slice(-8)];
-    out.hidden = false; out.textContent = 'Думаю…'; go.disabled = true; stop.hidden = false; note.textContent = ''; q.value = '';
-    const prevAnswers = ASK.turns.filter(x => x.role === 'assistant').map(x => x.content);
+    out.hidden = false; bubble('user', question); const ai = bubble('ai', 'Думаю…', 'wait');
+    go.disabled = true; stop.hidden = false; note.textContent = ''; q.value = '';
+    const tools = askTools(t), system = RULES + '\n\nДАННЫЕ КАРТОЧКИ (JSON):\n' + askContext(t);
+    const onText = ({text}) => { ai.classList.remove('wait'); ai.textContent = text; out.scrollTop = out.scrollHeight; };
     try {
-      const {text, truncated} = await SAMPLE(input, {cache: false, signal: ASK.ctl.signal, onText: ({text}) => { out.textContent = text; }});
-      ASK.turns.push({role: 'assistant', content: text});
-      if (truncated) note.textContent = 'Ответ обрезан по длине, спросите о меньшем.';
+      let res;
+      if (SITE_MODE) res = await apiChat(system, ASK.turns.slice(-10), tools, {onText, onStatus: s => { note.textContent = s; }, signal: ASK.ctl.signal});
+      else res = await SAMPLE([{role: 'user', content: system}, ...ASK.turns.slice(-10)], {cache: false, signal: ASK.ctl.signal, onText, tools: tools.map(x => ({name: x.name, description: x.description, inputSchema: x.inputSchema, execute: x.execute}))});
+      ai.classList.remove('wait'); ai.textContent = res.text; ASK.turns.push({role: 'assistant', content: res.text});
+      note.textContent = res.truncated ? 'Ответ обрезан по длине, спросите о меньшем.' : '';
     } catch (e) {
       const code = e && e.code;
-      if (code === 'cancelled') { note.textContent = 'Остановлено.'; if (e.text) ASK.turns.push({role: 'assistant', content: e.text}); else ASK.turns.pop(); }
-      else { ASK.turns.pop(); out.textContent = e && e.text ? e.text : ''; if (!out.textContent) out.hidden = true;
-        note.textContent = {not_granted: 'Доступ к Claude для этой страницы не разрешён.', sampling_disabled: 'Claude недоступен для этого аккаунта.', rate_limited: 'Слишком много запросов или исчерпан лимит, попробуйте позже.', session_expired: 'Нужно заново войти в claude.ai.', prompt_too_large: 'Слишком много данных, сузьте фильтры проводника.', refused: 'Claude отказался отвечать на этот вопрос.'}[code] || 'Не получилось получить ответ, попробуйте ещё раз.'; }
+      if (code === 'cancelled' || (e && e.name === 'AbortError')) { note.textContent = 'Остановлено.'; if (e.text) { ai.textContent = e.text; ASK.turns.push({role: 'assistant', content: e.text}); } else { ai.remove(); ASK.turns.pop(); } }
+      else { ASK.turns.pop(); if (e && e.text) ai.textContent = e.text; else ai.remove();
+        note.textContent = {not_granted: 'Доступ к Claude для этой страницы не разрешён.', sampling_disabled: 'Claude недоступен для этого аккаунта.', rate_limited: 'Слишком много запросов или исчерпан лимит, попробуйте позже.', session_expired: 'Нужно заново войти в claude.ai.', prompt_too_large: 'Слишком много данных, сузьте фильтры проводника.', refused: 'Claude отказался отвечать на этот вопрос.', auth: 'API-ключ не подходит или отозван.', http: 'Ошибка API: ' + (e.message || ''), loop: e.message}[code] || 'Не получилось получить ответ, попробуйте ещё раз.'; }
     } finally { go.disabled = false; stop.hidden = true; clr.hidden = ASK.turns.length === 0; }
   }
+}
+function openAuctions(id) {
+  const t = T[id], d = t.data;
+  $('#dlg-body').innerHTML = `<div class="top"><div class="t"><div class="eyebrow">Закупки клиники · ${d ? d.src : ''}</div><h2 class="name">${esc(t.hospital)}</h2><div class="hosp">${esc(t.fio)}${t.city ? ' · ' + esc(t.city) : ''}${t.inn ? ' · ИНН ' + t.inn : ''} · <button type="button" class="lnk" data-open="${id}">карточка курсанта</button></div>
+    <div class="meta">${d && d.new_n ? `<span class="chip new">${d.new_n} новых · ${fmt(d.new_sum)} млн${d.new_arx ? ` · Arthrex ${fmt(d.new_arx)}` : ''}</span>` : ''}${courseChips(t)}</div></div><button class="x" type="button" id="close" aria-label="Закрыть">×</button></div>
+    ${askBlock(t, 'auct')}<div class="sec" id="ex"></div>`;
+  EX = null; if (d && d.purch.length) { exInit(t); renderExFilters(); renderExBody(); } else $('#ex').innerHTML = '<div class="note">Закупок клиники в данных нет.</div>';
+  if (ASK_OK) askInit(t, 'auct');
+  $('#close').onclick = () => $('#dlg').close();
+  $('#dlg-body').querySelectorAll('[data-open]').forEach(a => a.onclick = e => { e.preventDefault(); openCard(+a.dataset.open); });
+  const dlg = $('#dlg'); if (!dlg.open) dlg.showModal(); dlg.scrollTop = 0;
+  try { history.replaceState(null, '', '#a' + id); } catch (e) {}
 }
 
 function openCard(id) {
@@ -699,7 +855,7 @@ function openCard(id) {
     ${t.survey.learn ? `<div>Хочет освоить</div><div>${esc(t.survey.learn)}</div>` : ''}${t.survey.track ? `<div>Как отслеживать</div><div>${esc(t.survey.track)}</div>` : ''}</div></div>` : '';
   let body = `<div class="top"><div class="t"><div class="eyebrow">${d ? d.src : D.group_label[t.group]}</div><h2 class="name">${esc(t.fio)}</h2><div class="hosp">${esc(t.hospital)}${t.city ? ', ' + esc(t.city) : ''}</div>
     <div class="meta">${d && d.new_n ? `<span class="chip new">${d.new_n} новых · ${fmt(d.new_sum)} млн${d.new_arx ? ` · Arthrex ${fmt(d.new_arx)}` : ''}</span>` : ''}${courseChips(t)}${d ? flagChips(t) : ''}</div></div><button class="x" type="button" id="close" aria-label="Закрыть">×</button></div>
-    ${askBlock(t)}<div class="two"><div class="sec"><h3>Курсант</h3>${who}</div><div class="sec"><h3>Участие в курсах</h3>${parts}</div></div>${survey}`;
+    ${d && d.purch && d.purch.length ? `<div><button type="button" class="btn ghost" data-auct="${id}">Закупки клиники: ${d.purch.length} → таблица, фильтры и чат с Claude</button></div>` : ''}${askBlock(t)}<div class="two"><div class="sec"><h3>Курсант</h3>${who}</div><div class="sec"><h3>Участие в курсах</h3>${parts}</div></div>${survey}`;
   if (d && d.whole.total > 0) {
     const b = d.before, a = d.after;
     body += `<div class="sec"><h3>Закупки клиники по месяцам, тыс. ₽</h3><div class="chartbox">${monthly(t)}</div></div>
@@ -715,9 +871,10 @@ function openCard(id) {
   }
   $('#dlg-body').innerHTML = body;
   EX = null; if (d && d.whole.total > 0) { exInit(t); renderExFilters(); renderExBody(); }
-  if (!SITE_MODE) askInit(t);
+  if (ASK_OK) askInit(t);
   $('#close').onclick = () => $('#dlg').close();
   $('#dlg-body').querySelectorAll('[data-open]').forEach(a => a.onclick = e => { e.preventDefault(); openCard(+a.dataset.open); });
+  $('#dlg-body').querySelectorAll('[data-auct]').forEach(a => a.onclick = () => openAuctions(+a.dataset.auct));
   const svg = $('#dlg-body svg.monthly'), tip = $('#tip');
   if (svg) {
     svg.addEventListener('mousemove', e => {
@@ -739,9 +896,11 @@ function applyLook(v) { if (v === 'cinema') document.documentElement.dataset.loo
 let look = 'cinema'; try { look = localStorage.getItem(LOOK_KEY) || 'cinema'; } catch (e) {}
 applyLook(look);
 $('#look').onclick = () => { look = look === 'cinema' ? 'plain' : 'cinema'; try { localStorage.setItem(LOOK_KEY, look); } catch (e) {} applyLook(look); render(); };
+$('#cgrid').addEventListener('pointermove', e => { const c = e.target.closest('.card'); if (!c) return; const b = c.getBoundingClientRect(); c.style.setProperty('--mx', ((e.clientX - b.left) / b.width * 100).toFixed(1) + '%'); c.style.setProperty('--my', ((e.clientY - b.top) / b.height * 100).toFixed(1) + '%'); });
 $('#grid').addEventListener('pointermove', e => { const c = e.target.closest('.card'); if (!c) return; const b = c.getBoundingClientRect(); c.style.setProperty('--mx', ((e.clientX - b.left) / b.width * 100).toFixed(1) + '%'); c.style.setProperty('--my', ((e.clientY - b.top) / b.height * 100).toFixed(1) + '%'); });
-render();
-const h = /^#t(\d+)$/.exec(location.hash); if (h && T[+h[1]]) openCard(+h[1]);
+const h0 = location.hash || '';
+if (h0 === '#all') showCourse(''); else if (/^#c\d+$/.test(h0) && D.courses[+h0.slice(2)]) showCourse(D.courses[+h0.slice(2)].course); else showHome();
+const h = /^#([ta])(\d+)$/.exec(h0); if (h && T[+h[2]]) { const t = T[+h[2]]; showCourse(t.course); if (h[1] === 't') openCard(+h[2]); else openAuctions(+h[2]); }
 
 }
 
