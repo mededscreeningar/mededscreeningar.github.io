@@ -138,6 +138,7 @@ details.method ul{margin:6px 0 0;padding-left:18px}
 .card .mets{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;border-top:1px solid var(--line);padding-top:9px}
 .card .met .l{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
 .card .met .v{font-family:var(--f-num);font-size:14px;font-weight:600;margin-top:2px;white-space:nowrap}
+.card[data-c] .mets{grid-template-columns:auto 1fr auto}
 .card .met .v small{font-weight:400;color:var(--muted);font-size:11px}
 .card .met.arx .v{color:var(--arx)}
 .card svg.spark{width:100%;height:46px;display:block}
@@ -521,7 +522,7 @@ function brandAfterBar(c, withLegend) {
 }
 function courseCard(c, i) {
   const dl = c.arx_after - c.arx_before, teach = c.teachers && c.teachers.length ? c.teachers.join(', ') : 'преподаватели не внесены';
-  const win = c.window === 'полное' ? '' : ` <small>${c.window === 'нет' ? 'окно «после» ещё не началось' : 'окно «после» неполное'}</small>`;
+  const win = c.window === 'полное' ? '' : `<div class="note">${c.window === 'нет' ? 'окно «после» ещё не началось' : 'окно «после» неполное: 12 месяцев после курса ещё не прошли'}</div>`;
   return `<button type="button" class="card ${c.new_n ? 'hasnew' : ''}" data-c="${i}" style="--i:${i}">
     <div class="ctype"><span class="chip course ${c.type === 'Колено' ? 'kn' : 'sh'} own">${c.type}</span><span class="num">${dLabel(c.date)}</span></div>
     <div class="fio">${esc(c.course)}</div>
@@ -530,11 +531,11 @@ function courseCard(c, i) {
     <div class="chips">${c.new_n ? `<span class="chip new">${c.new_n} нов${c.new_n === 1 ? 'ая' : c.new_n < 5 ? 'ые' : 'ых'} закуп${c.new_n === 1 ? 'ка' : c.new_n < 5 ? 'ки' : 'ок'}${c.new_live ? ` · ${c.new_live} идут` : ''}</span>` : ''}</div>
     <div class="mets">
       <div class="met"><div class="l">Курсантов</div><div class="v">${c.participants} <small>${c.with_data} с закупками</small></div></div>
-      <div class="met arx"><div class="l">Arthrex до → после</div><div class="v">${fmt(c.arx_before)} → ${fmt(c.arx_after)}${win}</div></div>
+      <div class="met arx"><div class="l">Arthrex до → после</div><div class="v">${fmt(c.arx_before)} → ${fmt(c.arx_after)}</div></div>
       <div class="met"><div class="l">Доля Arthrex</div><div class="v">${pct(c.share_before)} → ${pct(c.share_after)}</div></div>
-    </div>
+    </div>${win}
     <div class="yrow"><span class="cap">курсанты после курса</span>${outcomeBar(c, false)}</div>
-    ${c.total_after ? `<div class="yrow"><span class="cap">бренды после курса, ${fmt(c.total_after, 0)} млн</span>${brandAfterBar(c, false)}</div>` : ''}
+    ${c.total_after >= 0.5 ? `<div class="yrow"><span class="cap">бренды после курса, ${fmt(c.total_after, 0)} млн</span>${brandAfterBar(c, false)}</div>` : ''}
     <div class="foot"><span>${c.clinics} клиник · ${c.mdpro} в МД Про</span><span class="${dl >= 0 ? 'up' : 'down'}">${c.window === 'полное' ? (dl >= 0 ? '+' : '') + fmt(dl) + ' млн Arthrex' : ''}</span></div>
   </button>`;
 }
