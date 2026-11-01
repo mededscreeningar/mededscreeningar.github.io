@@ -277,6 +277,9 @@ details.method summary{cursor:pointer}
 :root[data-look="cinema"] .btn{background:var(--gold);color:#120D04}
 :root[data-look="cinema"] .btn.ghost{background:transparent;color:var(--ink);border-color:#334059}
 :root[data-look="cinema"] .lookbtn{border-color:var(--gold);color:var(--gold)}
+[data-priv="1"] .pii{filter:blur(6px);user-select:none;pointer-events:none;transition:filter .3s}
+[data-priv="1"] .pii-hide{display:none!important}
+.privbtn.on{background:var(--bad-soft);color:var(--bad);border-color:var(--bad)}
 .lookbtn{margin-top:8px;background:transparent;border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:12px;cursor:pointer;color:var(--muted)}
 .lookbtn:hover{color:var(--ink);border-color:var(--ink)}
 /* анимации «Кино»: карточки выезжают с задержкой, диалог раскрывается как занавес, KPI проявляются */
@@ -330,7 +333,7 @@ details.method summary{cursor:pointer}
 <div class="wrap">
   <header class="head">
     <div class="l"><a class="brandmark" href="#" id="home-link" aria-label="MedEdScreeningAR, на главную"><span class="mark">MedEdScreening<b>AR</b></span></a></div>
-    <div class="r"><div id="asof"></div><button type="button" class="lookbtn" id="look">Вид: кино</button> <button type="button" class="lookbtn" id="logout">Выйти</button></div>
+    <div class="r"><div id="asof"></div><button type="button" class="lookbtn privbtn" id="priv" title="Размыть ФИО, клиники и поставщиков и показать интерфейс по-английски">Скрыть данные</button> <button type="button" class="lookbtn" id="look">Вид: кино</button> <button type="button" class="lookbtn" id="logout">Выйти</button></div>
   </header>
 
   <section id="home">
@@ -376,7 +379,8 @@ const SEGK = ['sh', 'kn', 'imp', 'cons', 'ins', 'eq'];
 const BRAND_COLOR = {'Arthrex':'var(--arx)','Smith & Nephew':'var(--b2)','J&J':'var(--b3)','Stryker':'var(--b4)','Zimmer & SBM':'var(--b5)','Не определён':'var(--unk)'};
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const fmt = (v, d=1) => v == null ? '—' : v.toLocaleString('ru-RU', {minimumFractionDigits:d, maximumFractionDigits:d});
+let LANG = 'ru';
+const fmt = (v, d=1) => v == null ? '—' : v.toLocaleString(LANG === 'en' ? 'en-US' : 'ru-RU', {minimumFractionDigits:d, maximumFractionDigits:d});
 const pct = v => v == null ? '—' : Math.round(v*100) + '%';
 const mLabel = m => { const [y, mo] = m.split('-'); return ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'][+mo-1] + ' ' + y; };
 const dLabel = d => { const [y, m, dd] = d.split('-'); return `${+dd} ${['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'][+m-1]} ${y}`; };
@@ -485,14 +489,14 @@ function card(t) {
   const d = t.data;
   if (!d || d.whole.total === 0) {
     const why = !d ? (t.note || D.group_label[t.group]) : (d.flags.includes('no_sales') ? 'ИНН известен, но артроскопических закупок в МД Про и Тендерплане нет' : '');
-    return `<button type="button" class="card nodata" data-id="${t.id}"><div class="who"><div class="ava">${ini(t.fio)}</div><div class="t"><div class="fio">${esc(t.fio)}</div><div class="hosp">${esc(t.hospital || 'место работы не известно')}${t.city?', '+esc(t.city):''}</div></div></div>
+    return `<button type="button" class="card nodata" data-id="${t.id}"><div class="who"><div class="ava pii">${ini(t.fio)}</div><div class="t"><div class="fio pii">${esc(t.fio)}</div><div class="hosp"><span class="pii">${esc(t.hospital || 'место работы не известно')}</span>${t.city?', '+esc(t.city):''}</div></div></div>
       <div class="chips">${courseChips(t)}</div><div class="reason">${esc(why)}${t.survey?' · есть анкета':''}</div></button>`;
   }
   const b = d.before, a = d.after, dl = a.arx - b.arx;
   const afterNote = a.status === 'полное' ? '' : ` <small>${a.status === 'нет' ? 'нет данных' : a.status}</small>`;
   const newChip = d.new_n ? `<span class="chip new" title="новых закупок за ${D.new ? D.new.days : 7} дней, ${fmt(d.new_sum)} млн">${d.new_n} нов${d.new_n === 1 ? 'ая' : d.new_n < 5 ? 'ые' : 'ых'}${d.new_live ? ` · ${d.new_live} идут` : ''}</span>` : '';
   return `<button type="button" class="card ${d.new_n ? 'hasnew' : ''}" data-id="${t.id}">
-    <div class="who"><div class="ava">${ini(t.fio)}</div><div class="t"><div class="fio">${esc(t.fio)}</div><div class="hosp">${esc(t.hospital)}${t.city?', '+esc(t.city):''}</div></div></div>
+    <div class="who"><div class="ava pii">${ini(t.fio)}</div><div class="t"><div class="fio pii">${esc(t.fio)}</div><div class="hosp"><span class="pii">${esc(t.hospital)}</span>${t.city?', '+esc(t.city):''}</div></div></div>
     <div class="chips">${newChip}${courseChips(t)}${flagChips(t)}</div>
     <div class="mets">
       <div class="met arx"><div class="l">Arthrex</div><div class="v">${fmt(b.arx)} → ${fmt(a.arx)}${afterNote}</div></div>
@@ -622,13 +626,13 @@ function history(t) {
   const col = n => BRAND_COLOR[n] || 'var(--other)';
   const allB = {}; for (const r of ys) for (const [n, v] of r.brands) allB[n] = (allB[n] || 0) + v;
   const bnames = Object.keys(allB).sort((x, y) => allB[y] - allB[x]).slice(0, 8);
-  const rows = ys.map(r => `<tr><td class="num">${r.y}</td><td class="n">${r.n}</td><td class="n">${fmt(r.total)}</td><td class="n arx">${fmt(r.arx)}</td><td class="n">${r.total ? pct(r.arx / r.total) : '—'}</td><td class="n">${fmt(r.sh)}<small style="color:var(--muted)">${r.sh_arx ? ' / ' + fmt(r.sh_arx) : ''}</small></td><td class="n">${fmt(r.kn)}<small style="color:var(--muted)">${r.kn_arx ? ' / ' + fmt(r.kn_arx) : ''}</small></td><td class="n">${fmt(r.eq)}</td><td class="n">${fmt(r.cons + r.ins + r.imp)}</td><td class="n">${r.anchors || ''}</td><td style="color:var(--muted);white-space:nowrap">${esc(r.suppliers[0] ? r.suppliers[0][0] : '')}</td><td style="color:var(--muted)">${r.src}</td></tr>`).join('');
+  const rows = ys.map(r => `<tr><td class="num">${r.y}</td><td class="n">${r.n}</td><td class="n">${fmt(r.total)}</td><td class="n arx">${fmt(r.arx)}</td><td class="n">${r.total ? pct(r.arx / r.total) : '—'}</td><td class="n">${fmt(r.sh)}<small style="color:var(--muted)">${r.sh_arx ? ' / ' + fmt(r.sh_arx) : ''}</small></td><td class="n">${fmt(r.kn)}<small style="color:var(--muted)">${r.kn_arx ? ' / ' + fmt(r.kn_arx) : ''}</small></td><td class="n">${fmt(r.eq)}</td><td class="n">${fmt(r.cons + r.ins + r.imp)}</td><td class="n">${r.anchors || ''}</td><td class="pii" style="color:var(--muted);white-space:nowrap">${esc(r.suppliers[0] ? r.suppliers[0][0] : '')}</td><td style="color:var(--muted)">${r.src}</td></tr>`).join('');
   const bars = ys.map(r => `<div class="ybrand"><span class="num">${r.y}</span><div class="trk" title="${esc(r.brands.map(([n,v])=>n+' '+fmt(v)).join(', '))}">${r.total ? r.brands.map(([n, v]) => `<i style="width:${(v / r.total * 100).toFixed(1)}%;background:${col(n)}"></i>`).join('') : ''}</div><span class="num">${fmt(r.total)} млн</span></div>`).join('');
   return `<div class="sec"><h3>Вся история клиники: ${ys[0].y}–${ys[ys.length-1].y}, млн ₽</h3>
     <div class="tscroll"><table><thead><tr><th>Год</th><th class="n">Закупок</th><th class="n">Всего</th><th class="n">Arthrex</th><th class="n">Доля</th><th class="n">Плечо / Arx</th><th class="n">Колено / Arx</th><th class="n">Оборуд.</th><th class="n">Расходка и пр.</th><th class="n">Якоря, шт</th><th>Главный поставщик</th><th>Источник</th></tr></thead><tbody>${rows}</tbody></table></div>
     <div class="note">Плечо и колено — импланты. «Расходка и пр.» — расходка к стойке, шовный материал, инструменты, другие импланты. До 2024 и после ${dLabel(D.asof.mdpro)} бренд оценён по поставщику.</div></div>
     <div class="two"><div class="sec"><h3>Бренды по годам</h3><div class="bars">${bars}</div><div class="blegend">${bnames.map(n => `<span><i style="background:${col(n)}"></i>${esc(n)} <span class="num">${fmt(allB[n])}</span></span>`).join('')}</div></div>
-    <div class="sec"><h3>Главные поставщики по годам</h3><div class="kv">${ys.slice().reverse().map(r => `<div class="num">${r.y}</div><div>${r.suppliers.map(([s, v]) => esc(s) + ' <span class="num" style="color:var(--muted)">' + fmt(v) + '</span>').join('<br>') || '—'}</div>`).join('')}</div></div></div>
+    <div class="sec"><h3>Главные поставщики по годам</h3><div class="kv">${ys.slice().reverse().map(r => `<div class="num">${r.y}</div><div class="pii">${r.suppliers.map(([s, v]) => esc(s) + ' <span class="num" style="color:var(--muted)">' + fmt(v) + '</span>').join('<br>') || '—'}</div>`).join('')}</div></div></div>
     <div class="sec" id="ex"></div>`;
 }
 // ---------- проводник закупок клиники и «Спроси Claude»
@@ -640,7 +644,7 @@ let EX = null;
 function purchLi(r) {
   const anch = r.src === 'md' && (r.kl || r.kd || r.ti) ? ` · якоря: безузловых ${r.kl}, узловых ${r.kd}, титан ${r.ti}` : '';
   return `<li class="${r.new ? 'new' : ''}"><div class="h"><b>${r.new ? `<span class="stagepill new">новое${r.since ? ' с ' + dLabel(r.since) : ''}</span> ` : ''}<span class="stagepill ${r.st==='идёт приём заявок'?'live':''}">${r.st}</span> <span class="stagepill">${SRC_LABEL[r.src]}</span> ${dLabel(r.d)} · ${fmt(r.sum)} млн${r.arx ? ` · <span style="color:var(--arx)">Arthrex ${fmt(r.arx)}</span>` : ''}</b><span class="num" style="color:var(--muted)">${r.num || (r.fz ? 'ФЗ ' + r.fz : '')}</span></div>
-    <div class="s">${esc(r.sup)} → ${(r.brs.filter(([, v], i) => i === 0 || v >= 0.05)).map(([b, v]) => esc(b) + ' ' + fmt(v)).join(', ')}${r.bsrc === 'поставщик' ? ' (бренд по поставщику)' : ''}${r.segs.length ? ' · ' + r.segs.map(([k, v]) => D.seg_label[k] + ' ' + fmt(v)).join(', ') : ''}${anch}</div>
+    <div class="s"><span class="pii">${esc(r.sup)}</span> → ${(r.brs.filter(([, v], i) => i === 0 || v >= 0.05)).map(([b, v]) => esc(b) + ' ' + fmt(v)).join(', ')}${r.bsrc === 'поставщик' ? ' (бренд по поставщику)' : ''}${r.segs.length ? ' · ' + r.segs.map(([k, v]) => D.seg_label[k] + ' ' + fmt(v)).join(', ') : ''}${anch}</div>
     ${r.title ? `<div class="s">${esc(r.title)}</div>` : ''}<div class="s">${r.items.map(([p, v]) => esc(p) + ' ' + fmt(v)).join(' · ')}</div></li>`;
 }
 function exInit(t) { EX = {t, src: 'stitch', year: '', seg: '', brand: '', sup: '', stage: '', arx: false, onlynew: false, q: '', sort: 'date', limit: 50}; }
@@ -677,7 +681,7 @@ function renderExFilters() {
       <select data-ex="year">${opts(years.map(y => [y, y]), 'Все годы')}</select>
       <select data-ex="seg">${opts(Object.entries(D.seg_label), 'Все сегменты')}</select>
       <select data-ex="brand">${opts(brands.map(([b, v]) => [b, `${b} · ${fmt(v)} млн`]), 'Все бренды')}</select>
-      <select data-ex="sup">${opts(sups.map(([s, v]) => [s, `${s.slice(0, 40)} · ${fmt(v)}`]), 'Все поставщики')}</select>
+      <select data-ex="sup" class="pii-hide">${opts(sups.map(([s, v]) => [s, `${s.slice(0, 40)} · ${fmt(v)}`]), 'Все поставщики')}</select>
       <select data-ex="stage">${opts(stages.map(s => [s, s]), 'Любая стадия')}</select>
       <select data-ex="sort"><option value="date">Сначала новые</option><option value="sum">По сумме</option><option value="arx">По сумме Arthrex</option></select>
       <label class="chk"><input type="checkbox" data-ex="arx"> только с Arthrex</label>
@@ -813,7 +817,7 @@ function askInit(t, mode) {
     ASK.turns.push({role: 'user', content: question});
     out.hidden = false; bubble('user', question); const ai = bubble('ai', 'Думаю…', 'wait');
     go.disabled = true; stop.hidden = false; note.textContent = ''; q.value = '';
-    const tools = askTools(t), system = RULES + '\n\nДАННЫЕ КАРТОЧКИ (JSON):\n' + askContext(t);
+    const tools = askTools(t), system = (LANG === 'en' ? RULES + ' ВАЖНО: отвечай по-английски. Режим скрытия данных: не называй клиники, врачей, поставщиков и ИНН, говори обобщённо (the clinic, a local distributor, the trainee).' : RULES) + '\n\nДАННЫЕ КАРТОЧКИ (JSON):\n' + askContext(t);
     const onText = ({text}) => { ai.classList.remove('wait'); ai.textContent = text; out.scrollTop = out.scrollHeight; };
     try {
       let res;
@@ -831,7 +835,7 @@ function askInit(t, mode) {
 }
 function openAuctions(id) {
   const t = T[id], d = t.data;
-  $('#dlg-body').innerHTML = `<div class="top"><div class="t"><div class="eyebrow">Закупки клиники · ${d ? d.src : ''}</div><h2 class="name">${esc(t.hospital)}</h2><div class="hosp">${esc(t.fio)}${t.city ? ' · ' + esc(t.city) : ''}${t.inn ? ' · ИНН ' + t.inn : ''} · <button type="button" class="lnk" data-open="${id}">карточка курсанта</button></div>
+  $('#dlg-body').innerHTML = `<div class="top"><div class="t"><div class="eyebrow">Закупки клиники · ${d ? d.src : ''}</div><h2 class="name pii">${esc(t.hospital)}</h2><div class="hosp"><span class="pii">${esc(t.fio)}</span>${t.city ? ' · ' + esc(t.city) : ''}${t.inn ? ' · ИНН <span class="pii">' + t.inn + '</span>' : ''} · <button type="button" class="lnk" data-open="${id}">карточка курсанта</button></div>
     <div class="meta">${d && d.new_n ? `<span class="chip new">${d.new_n} новых · ${fmt(d.new_sum)} млн${d.new_arx ? ` · Arthrex ${fmt(d.new_arx)}` : ''}</span>` : ''}${courseChips(t)}</div></div><button class="x" type="button" id="close" aria-label="Закрыть">×</button></div>
     ${askBlock(t, 'auct')}<div class="sec" id="ex"></div>`;
   EX = null; if (d && d.purch.length) { exInit(t); renderExFilters(); renderExBody(); } else $('#ex').innerHTML = '<div class="note">Закупок клиники в данных нет.</div>';
@@ -844,17 +848,17 @@ function openAuctions(id) {
 
 function openCard(id) {
   const t = T[id], d = t.data;
-  const parts = `<ul class="list">${t.parts.map(p => `<li class="${p.own?'own':''}"><div class="h"><b>${esc(p.course)}</b><span class="num">${dLabel(p.date)}</span></div>${p.own ? '<div class="s">курс этой карточки, окна «до/после» считаются от него</div>' : `<div class="s"><a href="#" data-open="${T.findIndex(x => x.person === t.person && x.course === p.course)}">открыть карточку этого курса</a></div>`}${p.hospital !== t.hospital ? `<div class="s">место работы на курсе: ${esc(p.hospital)}</div>` : ''}</li>`).join('')}</ul>`;
-  const who = `<div class="kv"><div>Клиника</div><div>${esc(t.hospital)}${t.customer && t.customer !== t.hospital ? `<div class="note">${esc(t.customer)}</div>` : ''}</div>
-    ${t.inn ? `<div>ИНН</div><div class="num">${t.inn}</div>` : ''}${t.region ? `<div>Регион</div><div>${esc(t.region)}${t.distr ? ' · ' + esc(t.distr) : ''}</div>` : t.city ? `<div>Город</div><div>${esc(t.city)}</div>` : ''}
+  const parts = `<ul class="list">${t.parts.map(p => `<li class="${p.own?'own':''}"><div class="h"><b>${esc(p.course)}</b><span class="num">${dLabel(p.date)}</span></div>${p.own ? '<div class="s">курс этой карточки, окна «до/после» считаются от него</div>' : `<div class="s"><a href="#" data-open="${T.findIndex(x => x.person === t.person && x.course === p.course)}">открыть карточку этого курса</a></div>`}${p.hospital !== t.hospital ? `<div class="s">место работы на курсе: <span class="pii">${esc(p.hospital)}</span></div>` : ''}</li>`).join('')}</ul>`;
+  const who = `<div class="kv"><div>Клиника</div><div><span class="pii">${esc(t.hospital)}</span>${t.customer && t.customer !== t.hospital ? `<div class="note pii">${esc(t.customer)}</div>` : ''}</div>
+    ${t.inn ? `<div>ИНН</div><div class="num pii">${t.inn}</div>` : ''}${t.region ? `<div>Регион</div><div>${esc(t.region)}${t.distr ? ' · ' + esc(t.distr) : ''}</div>` : t.city ? `<div>Город</div><div>${esc(t.city)}</div>` : ''}
     ${t.segm ? `<div>Сегмент клиники</div><div>${esc(t.segm)}</div>` : ''}<div>Источник</div><div>${esc(D.group_label[t.group])}${t.match ? ` · сопоставление: ${esc(t.match)}` : ''}${t.note ? `<div class="note">${esc(t.note)}</div>` : ''}</div>
-    ${t.colleagues.length ? `<div>Коллеги на курсах</div><div>${t.colleagues.map(esc).join(', ')}<div class="note">цифры клиники у них общие</div></div>` : ''}</div>`;
+    ${t.colleagues.length ? `<div>Коллеги на курсах</div><div><span class="pii">${t.colleagues.map(esc).join(', ')}</span><div class="note">цифры клиники у них общие</div></div>` : ''}</div>`;
   const survey = t.survey ? `<div class="sec"><h3>Анкета курса «Плечо» 9–10 октября 2026</h3><div class="kv">
-    ${t.survey.pos ? `<div>Должность</div><div>${esc(t.survey.pos)}</div>` : ''}${t.survey.place ? `<div>Место работы</div><div>${esc(t.survey.place)}</div>` : ''}
+    ${t.survey.pos ? `<div>Должность</div><div>${esc(t.survey.pos)}</div>` : ''}${t.survey.place ? `<div>Место работы</div><div class="pii">${esc(t.survey.place)}</div>` : ''}
     <div>Стаж</div><div>хирург ${t.survey.surg_y ?? '—'} лет · артроскопия ${t.survey.arthro_y ?? '—'} лет</div>
     <div>Операций в год</div><div>${t.survey.ops ?? '—'} всего · артроскопий плеча ${t.survey.sh_arthro ?? '—'} · эндопротезов плеча ${t.survey.sh_endo ?? '—'}</div>
     ${t.survey.learn ? `<div>Хочет освоить</div><div>${esc(t.survey.learn)}</div>` : ''}${t.survey.track ? `<div>Как отслеживать</div><div>${esc(t.survey.track)}</div>` : ''}</div></div>` : '';
-  let body = `<div class="top"><div class="t"><div class="eyebrow">${d ? d.src : D.group_label[t.group]}</div><h2 class="name">${esc(t.fio)}</h2><div class="hosp">${esc(t.hospital)}${t.city ? ', ' + esc(t.city) : ''}</div>
+  let body = `<div class="top"><div class="t"><div class="eyebrow">${d ? d.src : D.group_label[t.group]}</div><h2 class="name pii">${esc(t.fio)}</h2><div class="hosp"><span class="pii">${esc(t.hospital)}</span>${t.city ? ', ' + esc(t.city) : ''}</div>
     <div class="meta">${d && d.new_n ? `<span class="chip new">${d.new_n} новых · ${fmt(d.new_sum)} млн${d.new_arx ? ` · Arthrex ${fmt(d.new_arx)}` : ''}</span>` : ''}${courseChips(t)}${d ? flagChips(t) : ''}</div></div><button class="x" type="button" id="close" aria-label="Закрыть">×</button></div>
     ${d && d.purch && d.purch.length ? `<div><button type="button" class="btn ghost" data-auct="${id}">Закупки клиники: ${d.purch.length} → таблица, фильтры и чат с Claude</button></div>` : ''}${askBlock(t)}<div class="two"><div class="sec"><h3>Курсант</h3>${who}</div><div class="sec"><h3>Участие в курсах</h3>${parts}</div></div>${survey}`;
   if (d && d.whole.total > 0) {
@@ -862,7 +866,7 @@ function openCard(id) {
     body += `<div class="sec"><h3>Закупки клиники по месяцам, тыс. ₽</h3><div class="chartbox">${monthly(t)}</div></div>
       <div class="two"><div class="sec"><h3>12 месяцев до и после курса ${dLabel(t.date)}, млн ₽</h3>${winTable(b, a)}</div>
       <div class="sec"><h3>Бренды до и после</h3>${brandBars(b, a)}
-        ${a.suppliers.length ? `<h3 style="margin-top:8px">Поставщики после курса</h3><div class="kv">${a.suppliers.map(([s, v]) => `<div class="num">${fmt(v)}</div><div>${esc(s)}</div>`).join('')}</div>` : ''}
+        ${a.suppliers.length ? `<h3 style="margin-top:8px">Поставщики после курса</h3><div class="kv">${a.suppliers.map(([s, v]) => `<div class="num">${fmt(v)}</div><div class="pii">${esc(s)}</div>`).join('')}</div>` : ''}
 </div></div>${history(t)}`;
     if (d.fresh.length) body += `<div class="sec"><h3>Свежие торги (после выгрузки МД Про, новое первым)</h3><ul class="list">${d.fresh.map(purchLi).join('')}</ul></div>`;
   } else if (d) {
@@ -891,6 +895,155 @@ function openCard(id) {
 }
 $('#dlg').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
 
+// ---------- «Скрыть данные»: размытие pii + интерфейс по-английски (словарь фраз, обход текстовых узлов и атрибутов)
+const EN = [
+  // шапка и главная
+  ['МД Про по', 'MD Pro to'], ['Тендерплан по', 'Tenderplan to'], ['собрано', 'built'], ['Вид: кино', 'Look: cinema'], ['Вид: рабочий', 'Look: plain'], ['Выйти', 'Log out'],
+  ['Размыть ФИО, клиники и поставщиков и показать интерфейс по-английски', 'Blur names, clinics and suppliers and show the interface in English'],
+  ['Курсы', 'Courses'], ['курсов 2024–2026', 'courses 2024–2026'], ['клиник в госзакупках', 'clinics in public procurement'], ['Все курсанты', 'All trainees'], ['Как считаем', 'Methodology'],
+  ['← Все курсы', '← All courses'], ['все курсы 2024–2026', 'all courses 2024–2026'], ['в госзакупках', 'in public procurement'],
+  // KPI
+  ['Карточек', 'Cards'], ['с ИНН клиники', 'with clinic TIN'], ['Закупки видны', 'Purchases visible'], ['Arthrex до → после', 'Arthrex before → after'],
+  ['клиник с полным окном, по самому раннему курсу', 'clinics with a full window, by the earliest course'], ['Все закупки до → после', 'All purchases before → after'],
+  ['млн ₽, те же клиники', 'RUB m, same clinics'], ['Начали или нарастили Arthrex', 'Started or grew Arthrex'], ['Ждём окно «после»', 'Awaiting “after” window'],
+  ['после курса меньше 3 месяцев', 'less than 3 months since the course'], ['Новое за {1} дней', 'New in {1} days'], ['идут сейчас', 'live now'], ['Есть новое', 'Has new'],
+  ['Появились новые закупки или сменилась стадия за последние {1} дней', 'New purchases or a stage change in the last {1} days'],
+  // карточка курса
+  ['преподаватели не внесены', 'faculty not entered'], ['новых закупок', 'new purchases'], ['новые закупки', 'new purchases'], ['новая закупка', 'new purchase'],
+  ['с закупками', 'with purchases'], ['Курсантов', 'Trainees'], ['Доля Arthrex', 'Arthrex share'],
+  ['окно «после» неполное: 12 месяцев после курса ещё не прошли', '“after” window incomplete: 12 months since the course have not passed yet'],
+  ['окно «после» ещё не началось', '“after” window has not started yet'], ['курсанты после курса', 'trainees after the course'], ['бренды после курса', 'brands after the course'],
+  ['в МД Про', 'in MD Pro'], ['млн Arthrex', 'm Arthrex'], ['начали Arthrex', 'started Arthrex'], ['нарастили', 'grew'], ['снизили', 'reduced'], ['без Arthrex', 'no Arthrex'],
+  ['ждём окно', 'awaiting window'], ['закупок нет', 'no purchases'], ['нет данных о клинике', 'no clinic data'], ['начали', 'started'],
+  ['Преподаватели не внесены. Пришлите список, и он появится здесь (файл data/courses_info.json).', 'Faculty not entered yet.'],
+  ['Программа курса не внесена. Пришлите программу, и она появится здесь.', 'Course programme not entered yet.'],
+  ['Преподаватели', 'Faculty'], ['Программа', 'Programme'], ['Курсанты после курса', 'Trainees after the course'],
+  ['Бренды в клиниках за 12 месяцев после курса', 'Brands in clinics 12 months after the course'], ['закупок после курса пока не видно', 'no purchases after the course yet'],
+  // фильтры
+  ['Фамилия, клиника, город, ИНН', 'Name, clinic, city, TIN'], ['Колено и плечо', 'Knee and shoulder'], ['Все клиники', 'All clinics'], ['Есть закупки в данных', 'Has purchases in data'],
+  ['Сначала новое', 'New first'], ['Arthrex после курса ↓', 'Arthrex after course ↓'], ['Прирост Arthrex ↓', 'Arthrex growth ↓'], ['Все закупки после ↓', 'All purchases after ↓'],
+  ['Дата курса ↓', 'Course date ↓'], ['По фамилии', 'By name'], ['Сбросить', 'Reset'], ['{1} из {2}', '{1} of {2}'],
+  ['все артроскопические закупки клиники', 'all arthroscopy purchases of the clinic'], ['курс карточки', 'this card’s course'], ['другие курсы курсанта', 'trainee’s other courses'],
+  ['в карточке: млн ₽ за 12 месяцев до → после курса', 'on the card: RUB m for 12 months before → after the course'],
+  ['Никого не найдено. Сбросьте фильтры.', 'Nobody found. Reset the filters.'],
+  // флаги (данные)
+  ['Начали Arthrex', 'Started Arthrex'], ['До курса Arthrex не покупали, за 12 мес после — купили', 'No Arthrex before the course, bought it within 12 months after'],
+  ['Arthrex вырос', 'Arthrex grew'], ['Закупки Arthrex за 12 мес после курса выше, чем за 12 мес до (более чем на 20%)', 'Arthrex purchases 12 months after the course exceed the 12 months before (by more than 20%)'],
+  ['Arthrex упал', 'Arthrex fell'], ['Закупки Arthrex после курса ниже, чем до (более чем на 20%)', 'Arthrex purchases after the course are below those before (by more than 20%)'],
+  ['Начали не с нами', 'Started with competitors'], ['До курса импланты колена и плеча не покупали, после — купили у конкурентов', 'No knee or shoulder implants before the course, bought from competitors after'],
+  ['Перешли на безузловые', 'Switched to knotless'], ['До курса только узловые или титановые якоря, после появились безузловые', 'Only knotted or titanium anchors before the course, knotless appeared after'],
+  ['Плечо не покупают', 'No shoulder purchases'], ['Импланты покупают, но ни одного для плеча с 01.2024', 'Buys implants, but none for shoulder since 01.2024'],
+  ['Безузловых нет', 'No knotless'], ['Якоря покупают, безузловых ни одного с 01.2024', 'Buys anchors, no knotless since 01.2024'],
+  ['Arthrex не покупают', 'No Arthrex'], ['Ни одной позиции Arthrex с 01.2024', 'No Arthrex items since 01.2024'],
+  ['После курса прошло меньше 3 месяцев, судить рано', 'Less than 3 months since the course, too early to judge'],
+  ['Закупок не видно', 'No purchases seen'], ['ИНН известен, но артроскопических позиций в МД Про и Тендерплане нет', 'TIN known, but no arthroscopy items in MD Pro or Tenderplan'],
+  ['ИНН известен, но артроскопических закупок клиники в МД Про и Тендерплане нет', 'TIN known, but no arthroscopy purchases of the clinic in MD Pro or Tenderplan'],
+  ['ИНН известен, но артроскопических закупок в МД Про и Тендерплане нет', 'TIN known, but no arthroscopy purchases in MD Pro or Tenderplan'],
+  // группы клиник (данные)
+  ['Клиника в МД Про', 'Clinic in MD Pro'], ['Клиника только в Тендерплане', 'Clinic in Tenderplan only'], ['Частная клиника', 'Private clinic'], ['Зарубежная клиника', 'Foreign clinic'],
+  ['Военный госпиталь', 'Military hospital'], ['РЖД-Медицина', 'RZD-Medicine'], ['Госучреждение, закупки не найдены', 'Public institution, no purchases found'], ['Место работы не известно', 'Workplace unknown'],
+  ['Зарубежная клиника — нет в госзакупках РФ', 'Foreign clinic, not in Russian public procurement'], ['место работы не известно', 'workplace unknown'],
+  // карточка курсанта
+  ['также:', 'also:'], ['Все закупки', 'All purchases'], ['нет данных', 'no data'], ['по годам,', 'by year,'], ['общие с {1} курсантами', 'shared with {1} trainees'], ['общие с {1} курсантом', 'shared with {1} trainee'],
+  ['Закупки:', 'Purchases:'], ['свежих торгов', 'recent tenders'], ['свежих', 'recent'], ['есть анкета', 'has survey'], ['курсантов', 'trainees'], ['курсанты', 'trainees'],
+  ['новых', 'new'], ['новое', 'new'], ['идут', 'live'], ['клиник', 'clinics'],
+  // подробная карточка
+  ['Закупки клиники: {1} → таблица, фильтры и чат с Claude', 'Clinic purchases: {1} → table, filters and chat with Claude'],
+  ['Курсант', 'Trainee'], ['Клиника', 'Clinic'], ['ИНН', 'TIN'], ['Регион', 'Region'], ['Город', 'City'], ['Сегмент клиники', 'Clinic segment'], ['Источник', 'Source'], ['сопоставление:', 'matching:'],
+  ['Коллеги на курсах', 'Colleagues on courses'], ['цифры клиники у них общие', 'clinic figures are shared with them'], ['Участие в курсах', 'Course participation'],
+  ['курс этой карточки, окна «до/после» считаются от него', 'this card’s course; the before/after windows are measured from it'], ['открыть карточку этого курса', 'open the card for this course'],
+  ['место работы на курсе:', 'workplace at the course:'], ['Анкета курса «Плечо» 9–10 октября 2026', 'Survey, Shoulder course 9–10 October 2026'], ['Должность', 'Position'], ['Место работы', 'Workplace'],
+  ['Стаж', 'Experience'], ['хирург', 'surgeon'], ['лет · артроскопия', 'years · arthroscopy'], ['лет', 'years'], ['Операций в год', 'Operations per year'], ['всего · артроскопий плеча', 'total · shoulder arthroscopies'],
+  ['эндопротезов плеча', 'shoulder arthroplasties'], ['Хочет освоить', 'Wants to learn'], ['Как отслеживать', 'How to track'],
+  ['Закупки клиники по месяцам, тыс. ₽', 'Clinic purchases by month, RUB k'], ['12 месяцев до и после курса', '12 months before and after the course'],
+  ['Бренды до и после', 'Brands before and after'], ['Поставщики после курса', 'Suppliers after the course'],
+  ['Свежие торги (после выгрузки МД Про, новое первым)', 'Recent tenders (after the MD Pro extract, new first)'],
+  ['Нужны отгрузки дистрибьютора или опрос врача.', 'Needs distributor shipments or a doctor survey.'],
+  ['Колено: импланты', 'Knee: implants'], ['Плечо: импланты', 'Shoulder: implants'], ['Другие импланты', 'Other implants'], ['Расходка и пр.', 'Consumables etc.'], ['Расходка', 'Consumables'],
+  ['Инструменты', 'Instruments'], ['Оборудование', 'Equipment'], ['Оборуд.', 'Equip.'], ['Якоря, шт', 'Anchors, pcs'], ['из них Arthrex, шт', 'of which Arthrex, pcs'], ['безузловые, шт', 'knotless, pcs'],
+  ['узловые, шт', 'knotted, pcs'], ['титановые, шт', 'titanium, pcs'], ['12 мес до', '12 mo before'], ['12 мес после', '12 mo after'], ['Окно «до»:', '“Before” window:'], ['«после»:', '“after”:'],
+  ['нет закупок', 'no purchases'], ['данных после курса ещё нет', 'no data after the course yet'], ['данных после курса только', 'data after the course only'],
+  ['Тип якорей известен только по МД Про.', 'Anchor type is known from MD Pro only.'], ['Вся история клиники:', 'Full clinic history:'], ['Год', 'Year'], ['Закупок', 'Purchases'], ['Всего', 'Total'],
+  ['Плечо / Arx', 'Shoulder / Arx'], ['Колено / Arx', 'Knee / Arx'], ['Главный поставщик', 'Main supplier'],
+  ['Плечо и колено — импланты. «Расходка и пр.» — расходка к стойке, шовный материал, инструменты, другие импланты. До 2024 и после', 'Shoulder and knee: implants. “Consumables etc.”: tower consumables, sutures, instruments, other implants. Before 2024 and after'],
+  ['бренд оценён по поставщику', 'brand estimated by supplier'], ['Бренды по годам', 'Brands by year'], ['Главные поставщики по годам', 'Main suppliers by year'],
+  // проводник
+  ['Закупки клиники ·', 'Clinic purchases ·'], ['Закупки клиники:', 'Clinic purchases:'], ['Закупки клиники', 'Clinic purchases'], ['по Тендерплану', 'from Tenderplan'], ['контрактов МД Про', 'MD Pro contracts'],
+  ['Как в суммах: МД Про + Тендерплан вне МД Про', 'As in totals: MD Pro + Tenderplan outside MD Pro'], ['Всё, включая дубли за период МД Про', 'Everything, incl. duplicates in the MD Pro period'],
+  ['Только Тендерплан', 'Tenderplan only'], ['Только МД Про', 'MD Pro only'], ['Все годы', 'All years'], ['Все сегменты', 'All segments'], ['Все бренды', 'All brands'], ['Все поставщики', 'All suppliers'],
+  ['Любая стадия', 'Any stage'], ['Сначала новые', 'Newest first'], ['По сумме Arthrex', 'By Arthrex amount'], ['По сумме', 'By amount'], ['только с Arthrex', 'with Arthrex only'], ['только новое', 'new only'],
+  ['Поиск: позиция, название, поставщик, номер', 'Search: item, title, supplier, number'], ['якоря: безузловых', 'anchors: knotless'], ['узловых', 'knotted'], ['титан', 'titanium'],
+  ['Скачать CSV', 'Download CSV'], ['Копировать таблицу', 'Copy table'], ['Ничего не найдено под эти фильтры.', 'Nothing found for these filters.'], ['Показать ещё {1} из {2}', 'Show {1} more of {2}'],
+  ['контракт', 'contract'], ['итоги', 'results'], ['идёт приём заявок', 'bids open'], ['МД Про + Тендерплан', 'MD Pro + Tenderplan'], ['Тендерплан', 'Tenderplan'], ['МД Про', 'MD Pro'],
+  ['(бренд по поставщику)', '(brand by supplier)'], ['Скопировано', 'Copied'], ['Не удалось скопировать', 'Copy failed'], ['Сохранено', 'Saved'], ['Отменено', 'Cancelled'], ['Недоступно здесь', 'Not available here'],
+  ['Не определён', 'Undetermined'], ['Россия', 'Russia'], ['карточка курсанта', 'trainee card'], ['Закупок клиники в данных нет.', 'No clinic purchases in the data.'], ['Закупки', 'Purchases'], ['закупок', 'purchases'], ['закупки', 'purchases'],
+  // чат
+  ['Спросить Claude о закупках клиники', 'Ask Claude about the clinic’s purchases'], ['Спросить Claude об этом курсанте', 'Ask Claude about this trainee'],
+  ['Что изменилось в закупках после курса?', 'What changed in purchases after the course?'], ['Кто вытесняет Arthrex и через кого?', 'Who is displacing Arthrex and through whom?'],
+  ['Что предложить этой клинике и курсанту?', 'What to offer this clinic and trainee?'], ['Какие свежие торги важны и почему?', 'Which recent tenders matter and why?'],
+  ['Напиши короткое письмо курсанту после курса', 'Write a short follow-up letter to the trainee'],
+  ['Сколько клиника тратит на артроскопию по годам и какая доля Arthrex?', 'How much does the clinic spend on arthroscopy by year and what is the Arthrex share?'],
+  ['Какие поставщики выигрывают и чьи бренды возят?', 'Which suppliers win and whose brands do they carry?'], ['Что купили в этом году и что идёт сейчас?', 'What was bought this year and what is live now?'],
+  ['Покажи закупки якорей за последние два года', 'Show anchor purchases for the last two years'], ['Где Arthrex проиграл, кому и на какую сумму?', 'Where did Arthrex lose, to whom and for how much?'],
+  ['Что найти или посчитать в закупках клиники? Claude ищет по всем закупкам, считает суммы и может показать результат в таблице ниже.', 'What to find or compute in the clinic’s purchases? Claude searches all purchases, sums them up and can show the result in the table below.'],
+  ['Вопрос по курсанту, клинике или закупкам. Claude видит карточку, историю по годам и может искать и считать по всем закупкам клиники.', 'A question about the trainee, clinic or purchases. Claude sees the card, the yearly history and can search and compute across all clinic purchases.'],
+  ['Спросить', 'Ask'], ['Стоп', 'Stop'], ['Новый разговор', 'New conversation'], ['Ответ считает Claude через API на ключе компании.', 'Answered by Claude via the API on the company key.'],
+  ['Ответ считается на вашем аккаунте Claude; при первом вопросе браузер спросит разрешение.', 'Answered on your Claude account; the browser asks permission on the first question.'],
+  ['Думаю…', 'Thinking…'], ['Считаю:', 'Computing:'], ['Остановлено.', 'Stopped.'], ['Ответ обрезан по длине, спросите о меньшем.', 'The answer was cut off, ask about less.'],
+  ['Claude ещё подключается, попробуйте через секунду.', 'Claude is still connecting, try again in a second.'], ['Спросить Claude можно только при просмотре на claude.ai или в приложении Claude.', 'Asking Claude works only on claude.ai or in the Claude app.'],
+  ['Доступ к Claude для этой страницы не разрешён.', 'Claude access is not granted for this page.'], ['Claude недоступен для этого аккаунта.', 'Claude is unavailable for this account.'],
+  ['Слишком много запросов или исчерпан лимит, попробуйте позже.', 'Too many requests or the limit is exhausted, try later.'], ['Нужно заново войти в claude.ai.', 'Sign in to claude.ai again.'],
+  ['Слишком много данных, сузьте фильтры проводника.', 'Too much data, narrow the explorer filters.'], ['Claude отказался отвечать на этот вопрос.', 'Claude declined to answer this question.'],
+  ['API-ключ не подходит или отозван.', 'The API key is invalid or revoked.'], ['Ошибка API:', 'API error:'], ['Не получилось получить ответ, попробуйте ещё раз.', 'Could not get an answer, try again.'],
+  ['Слишком много шагов, уточните вопрос.', 'Too many steps, refine the question.'],
+  // методика
+  ['Курсанту присвоены закупки всей его клиники; при нескольких курсантах из одной клиники цифры общие.', 'Each trainee is assigned the purchases of their whole clinic; several trainees from one clinic share the figures.'],
+  ['Карточка — участие курсанта в курсе. Окно «до» — 12 месяцев перед этим курсом, «после» — 12 месяцев после; отметки других курсов курсанта остаются на графике.', 'A card is one trainee’s participation in one course. The “before” window is the 12 months before that course, “after” the 12 months after; the trainee’s other courses stay marked on the chart.'],
+  ['бренд точный. Тендерплан: до 2024 и после МД Про, бренд оценён по поставщику.', 'exact brand. Tenderplan: before 2024 and after MD Pro, brand estimated by supplier.'],
+  ['Тип якорей (безузловые, титан) известен только по МД Про.', 'Anchor type (knotless, titanium) is known from MD Pro only.'],
+  ['Вся история клиники: с первого года, где Тендерплан видит артроскопические закупки клиники (с 2014). Список закупок — по Тендерплану, бренд там оценка по поставщику.', 'Full clinic history: from the first year Tenderplan sees arthroscopy purchases of the clinic (since 2014). The purchase list comes from Tenderplan, where brand is estimated by supplier.'],
+  // статусы окна, курсы, месяцы
+  ['полное', 'full'], ['{1} мес', '{1} mo'], ['колено начинающие', 'Knee beginners'], ['колено про', 'Knee pro'], ['колено', 'Knee'], ['плечо', 'Shoulder'], ['Колено', 'Knee'], ['Плечо', 'Shoulder'],
+  ['января', 'January'], ['февраля', 'February'], ['марта', 'March'], ['апреля', 'April'], ['мая', 'May'], ['июня', 'June'], ['июля', 'July'], ['августа', 'August'], ['сентября', 'September'], ['октября', 'October'], ['ноября', 'November'], ['декабря', 'December'],
+  ['янв', 'Jan'], ['фев', 'Feb'], ['мар', 'Mar'], ['апр', 'Apr'], ['май', 'May'], ['июн', 'Jun'], ['июл', 'Jul'], ['авг', 'Aug'], ['сен', 'Sep'], ['окт', 'Oct'], ['ноя', 'Nov'], ['дек', 'Dec'],
+  ['млн ₽', 'RUB m'], ['млн', 'm'], ['тыс. ₽', 'RUB k'], ['шт', 'pcs'], ['мес', 'mo'], ['ФЗ', 'FZ'], ['нет', 'none'], ['да, с', 'yes, since'], ['с {1}', 'since {1}'], ['из', 'of'], ['и', 'and'],
+];
+const CYR = 'А-Яа-яЁё';
+const RX = EN.map(([ru, en]) => { const src = ru.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\{(\d)\\\}/g, '(\\d+)'); return [new RegExp(`(?<![${CYR}])${src}(?![${CYR}])`, 'g'), en.replace(/\{(\d)\}/g, '$$$1'), ru]; })
+  .sort((a, b) => b[2].length - a[2].length);
+const hasCyr = new RegExp(`[${CYR}]`);
+function toEn(str) { if (!hasCyr.test(str)) return str; let out = str; for (const [rx, en] of RX) { if (!hasCyr.test(out)) break; out = out.replace(rx, (m, ...g) => { let r = en; g.slice(0, -2).forEach((v, i) => { r = r.replace('$' + (i + 1), v); }); return /^[А-ЯЁ]/.test(m) ? r[0].toUpperCase() + r.slice(1) : r; }); } return out; }
+const ORIG = new WeakMap();
+const ATTRS = ['placeholder', 'title', 'aria-label'];
+function i18n(root) {
+  if (LANG !== 'en' || !root) return;
+  const w = document.createTreeWalker(root, 5 /* элементы и текст */);
+  for (let n = w.currentNode; n; n = w.nextNode()) {
+    if (n.nodeType === 3) { if (n.parentNode && n.parentNode.tagName === 'SCRIPT') continue; if (!ORIG.has(n)) ORIG.set(n, n.nodeValue); const v = toEn(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v; }
+    else if (n.nodeType === 1) for (const a of ATTRS) if (n.hasAttribute(a)) { const key = n; if (!ORIG.has(key)) ORIG.set(key, {}); const o = ORIG.get(key); if (!(a in o)) o[a] = n.getAttribute(a); const v = toEn(n.getAttribute(a)); if (v !== o[a]) n.setAttribute(a, v); }
+  }
+}
+function restoreRu(root) {
+  const w = document.createTreeWalker(root, 5);
+  for (let n = w.currentNode; n; n = w.nextNode()) {
+    if (n.nodeType === 3 && ORIG.has(n)) n.nodeValue = ORIG.get(n);
+    else if (n.nodeType === 1 && ORIG.has(n)) for (const [a, v] of Object.entries(ORIG.get(n))) n.setAttribute(a, v);
+  }
+}
+new MutationObserver(ms => { if (LANG !== 'en') return; for (const m of ms) for (const n of m.addedNodes) i18n(n); }).observe(document.body, {childList: true, subtree: true});
+let PRIV = false; try { PRIV = localStorage.getItem('eof-priv') === '1'; } catch (e) {}
+function applyPriv(on) {
+  PRIV = on; LANG = on ? 'en' : 'ru';
+  if (on) document.documentElement.dataset.priv = '1'; else delete document.documentElement.dataset.priv;
+  $('#priv').classList.toggle('on', on);
+  if (!on) restoreRu(document.body);
+  render(); if (state.view === 'course') $('#chead').innerHTML = courseHead(state.course ? D.courses[CI[state.course]] : null);
+  if ($('#dlg').open) { const h = /^#([ta])(\d+)$/.exec(location.hash); if (h) (h[1] === 't' ? openCard : openAuctions)(+h[2]); }
+  if (on) i18n(document.body);
+  $('#priv').textContent = on ? 'Show data' : 'Скрыть данные';
+}
+$('#priv').onclick = () => { try { localStorage.setItem('eof-priv', PRIV ? '0' : '1'); } catch (e) {} applyPriv(!PRIV); };
+
 // вид «Кино» / рабочий
 const LOOK_KEY = 'eof-look';
 function applyLook(v) { if (v === 'cinema') document.documentElement.dataset.look = 'cinema'; else delete document.documentElement.dataset.look; $('#look').textContent = v === 'cinema' ? 'Вид: рабочий' : 'Вид: кино'; }
@@ -902,6 +1055,7 @@ $('#grid').addEventListener('pointermove', e => { const c = e.target.closest('.c
 const h0 = location.hash || '';
 if (h0 === '#all') showCourse(''); else if (/^#c\d+$/.test(h0) && D.courses[+h0.slice(2)]) showCourse(D.courses[+h0.slice(2)].course); else showHome();
 const h = /^#([ta])(\d+)$/.exec(h0); if (h && T[+h[2]]) { const t = T[+h[2]]; showCourse(t.course); if (h[1] === 't') openCard(+h[2]); else openAuctions(+h[2]); }
+if (PRIV) applyPriv(true);
 
 }
 
