@@ -1080,7 +1080,7 @@ async function tryLogin(pw, silent) {
     G('#gate').hidden = true; G('#app').hidden = false;
     boot(data);
   } catch (e) {
-    if (e.name === 'OperationError') { err.textContent = 'Неверный пароль. Проверьте раскладку и попробуйте ещё раз.'; G('#pw').setAttribute('aria-invalid', 'true'); G('#pw').select(); }
+    if (e.name === 'OperationError') { err.textContent = 'Неверный пароль. Позвони Стасу.'; G('#pw').setAttribute('aria-invalid', 'true'); G('#pw').select(); }
     else err.textContent = e.message || 'Ошибка';
     try { sessionStorage.removeItem('meded_pw'); } catch (x) {}
   } finally { btn.disabled = false; btn.textContent = 'Войти'; }
